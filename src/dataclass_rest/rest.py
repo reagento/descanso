@@ -1,10 +1,21 @@
-from typing import Any, Callable, Dict, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, Optional, Protocol, cast
 
 from .boundmethod import BoundMethod
 from .method import Method
 from .parse_func import DEFAULT_BODY_PARAM, UrlTemplate, parse_func
 
-_Func = TypeVar("_Func", bound=Callable[..., Any])
+
+class RestWrapper(Protocol):
+    def __call__(
+        self,
+        url_template: UrlTemplate,
+        *,
+        body_name: str = DEFAULT_BODY_PARAM,
+        additional_params: Optional[Dict[str, Any]] = None,
+        method_class: Optional[Callable[..., BoundMethod]] = None,
+        send_json: bool = True,
+    ) -> Callable[[Callable], Method]:
+        raise NotImplementedError
 
 
 def rest(
@@ -33,11 +44,11 @@ def rest(
     return dec
 
 
-def _rest_method(func: _Func, method: str) -> _Func:
+def _rest_method(func: Callable[..., Any], method: str) -> RestWrapper:
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs, method=method)
 
-    return cast(_Func, wrapper)
+    return cast(RestWrapper, wrapper)
 
 
 get = _rest_method(rest, method="GET")
