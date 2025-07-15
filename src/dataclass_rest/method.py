@@ -18,6 +18,10 @@ class Method:
 
     def __set_name__(self, owner, name):
         self.name = name
+
+        if self.method_class is not None:
+            return
+
         if owner.method_class:
             self.method_class = owner.method_class
         else:
