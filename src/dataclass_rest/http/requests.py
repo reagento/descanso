@@ -1,4 +1,5 @@
 import urllib.parse
+import http
 from json import JSONDecodeError
 from typing import Any, Optional, Tuple
 
@@ -27,7 +28,13 @@ class RequestsMethod(SyncMethod):
 
     def _response_body(self, response: Response) -> Any:
         try:
-            return response.json()
+            if response.status_code == http.HTTPStatus.NO_CONTENT:
+                return None
+            match response.headers.get("content-type"):
+                case "text/html":
+                    return response.text()
+                case _:
+                    return response.json()
         except RequestException as e:
             raise ClientLibraryError from e
         except JSONDecodeError as e:
