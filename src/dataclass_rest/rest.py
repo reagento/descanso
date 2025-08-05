@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Optional, TypeVar, cast
 from .boundmethod import BoundMethod
 from .method import Method
 from .parse_func import DEFAULT_BODY_PARAM, UrlTemplate, parse_func
+from .response_type import ResponseTypeLiteral, ResponseType
 
 _Func = TypeVar("_Func", bound=Callable[..., Any])
 
@@ -15,9 +16,17 @@ def rest(
     additional_params: Optional[Dict[str, Any]] = None,
     method_class: Optional[Callable[..., BoundMethod]] = None,
     send_json: bool = True,
+    response_type: ResponseTypeLiteral = "json",
 ) -> Callable[[Callable], Method]:
     if additional_params is None:
         additional_params = {}
+    try:
+        response_type_enum = ResponseType(response_type)
+    except ValueError:
+        raise TypeError(
+            f"'{response_type}' is not a valid response type. "
+            f"Use one of {list(ResponseTypeLiteral.__args__)}"
+        )
 
     def dec(func: Callable) -> Method:
         method_spec = parse_func(
@@ -28,7 +37,7 @@ def rest(
             additional_params=additional_params,
             is_json_request=send_json,
         )
-        return Method(method_spec, method_class=method_class)
+        return Method(method_spec, method_class=method_class, response_type=response_type_enum)
 
     return dec
 

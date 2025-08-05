@@ -3,16 +3,19 @@ from typing import Callable, Optional
 from .boundmethod import BoundMethod
 from .client_protocol import ClientProtocol
 from .methodspec import MethodSpec
+from .response_type import ResponseType
 
 
 class Method:
     def __init__(
         self,
         method_spec: MethodSpec,
+        response_type: ResponseType,
         method_class: Optional[Callable[..., BoundMethod]] = None,
     ):
         self.name = method_spec.func.__name__
         self.method_spec = method_spec
+        self.response_type = response_type
         self.method_class = method_class
         self._on_error = None
 
@@ -42,6 +45,7 @@ class Method:
             method_spec=self.method_spec,
             client=instance,
             on_error=self._on_error,
+            response_type=self.response_type,
         )
 
     def on_error(self, func) -> "Method":

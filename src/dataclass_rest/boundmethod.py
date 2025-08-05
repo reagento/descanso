@@ -7,6 +7,7 @@ from .client_protocol import ClientMethodProtocol, ClientProtocol
 from .exceptions import ClientLibraryError, MalformedResponse
 from .http_request import File, HttpRequest
 from .methodspec import MethodSpec
+from .response_type import ResponseType
 
 logger = getLogger(__name__)
 
@@ -18,11 +19,13 @@ class BoundMethod(ClientMethodProtocol, ABC):
         method_spec: MethodSpec,
         client: ClientProtocol,
         on_error: Optional[Callable[[Any], Any]],
+        response_type: ResponseType,
     ):
         self.name = name
         self.method_spec = method_spec
         self.client = client
         self.on_error = on_error or self._on_error_default
+        self.response_type = response_type
 
     def _apply_args(self, *args, **kwargs) -> Dict:
         return getcallargs(

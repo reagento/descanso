@@ -20,6 +20,7 @@ from dataclass_rest.exceptions import (
     ServerError,
 )
 from dataclass_rest.http_request import HttpRequest
+from dataclass_rest.response_type import ResponseType
 
 
 class AiohttpMethod(AsyncMethod):
@@ -34,7 +35,16 @@ class AiohttpMethod(AsyncMethod):
 
     async def _response_body(self, response: ClientResponse) -> Any:
         try:
-            return await response.json()
+            if self.response_type == ResponseType.JSON:
+                return await response.json()
+            elif self.response_type == ResponseType.TEXT:
+                return await response.text()
+            elif self.response_type == ResponseType.BYTES:
+                return await response.read()
+            elif self.response_type == ResponseType.NO_CONTENT:
+                return None
+            else:
+                raise ValueError("Unknown expected response type")
         except AioHttpClientError as e:
             raise ClientLibraryError from e
         except JSONDecodeError as e:

@@ -13,6 +13,7 @@ from dataclass_rest.exceptions import (
     ServerError,
 )
 from dataclass_rest.http_request import File, HttpRequest
+from dataclass_rest.response_type import ResponseType
 
 
 class RequestsMethod(SyncMethod):
@@ -27,7 +28,16 @@ class RequestsMethod(SyncMethod):
 
     def _response_body(self, response: Response) -> Any:
         try:
-            return response.json()
+            if self.response_type == ResponseType.JSON:
+                return response.json()
+            elif self.response_type == ResponseType.TEXT:
+                return response.text
+            elif self.response_type == ResponseType.BYTES:
+                return response.content
+            elif self.response_type == ResponseType.NO_CONTENT:
+                return None
+            else:
+                raise ValueError("Unknown expected response type")
         except RequestException as e:
             raise ClientLibraryError from e
         except JSONDecodeError as e:
