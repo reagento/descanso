@@ -1,4 +1,5 @@
 import urllib.parse
+import http
 from json import JSONDecodeError
 from typing import Any, Optional, Tuple
 
@@ -27,7 +28,18 @@ class RequestsMethod(SyncMethod):
 
     def _response_body(self, response: Response) -> Any:
         try:
-            return response.json()
+            if response.status_code == http.HTTPStatus.NO_CONTENT:
+                return None
+            raw_content_type = response.headers.get("content-type")
+            if raw_content_type is not None:
+                content_type = raw_content_type.split(';')[0].strip()
+            else:
+                # default value according to RFC 2616
+                content_type = "application/octet-stream"
+            if content_type in ("text/html", "text/plain", "text/css", "text/csv"):
+                return response.text()
+            else:
+                return response.json()
         except RequestException as e:
             raise ClientLibraryError from e
         except JSONDecodeError as e:
