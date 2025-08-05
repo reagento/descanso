@@ -1,5 +1,4 @@
 import urllib.parse
-import http
 from json import JSONDecodeError
 from typing import Any, Optional
 
@@ -21,6 +20,7 @@ from dataclass_rest.exceptions import (
     ServerError,
 )
 from dataclass_rest.http_request import HttpRequest
+from dataclass_rest.response_type import ResponseType
 
 
 class AiohttpMethod(AsyncMethod):
@@ -35,10 +35,12 @@ class AiohttpMethod(AsyncMethod):
 
     async def _response_body(self, response: ClientResponse) -> Any:
         try:
-            if response.status == http.HTTPStatus.NO_CONTENT:
-                return None
-            if response.content_type in ("text/html", "text/plain", "text/css", "text/csv"):
+            if self.method_spec.response_type is str:
                 return await response.text()
+            elif self.method_spec.response_type is bytes:
+                return await response.read()
+            elif self.method_spec.response_type is type(None):
+                return None
             else:
                 return await response.json()
         except AioHttpClientError as e:
