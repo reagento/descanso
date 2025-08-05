@@ -27,7 +27,14 @@ class RequestsMethod(SyncMethod):
 
     def _response_body(self, response: Response) -> Any:
         try:
-            return response.json()
+            if self.method_spec.response_type is str:
+                return response.text()
+            elif self.method_spec.response_type is bytes:
+                return response.read()
+            elif self.method_spec.response_type is type(None):
+                return None
+            else:
+                return response.json()
         except RequestException as e:
             raise ClientLibraryError from e
         except JSONDecodeError as e:

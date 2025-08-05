@@ -34,7 +34,14 @@ class AiohttpMethod(AsyncMethod):
 
     async def _response_body(self, response: ClientResponse) -> Any:
         try:
-            return await response.json()
+            if self.method_spec.response_type is str:
+                return await response.text()
+            elif self.method_spec.response_type is bytes:
+                return await response.read()
+            elif self.method_spec.response_type is type(None):
+                return None
+            else:
+                return await response.json()
         except AioHttpClientError as e:
             raise ClientLibraryError from e
         except JSONDecodeError as e:
