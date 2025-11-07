@@ -14,7 +14,9 @@ def make_request(spec: MethodSpec, args: dict[str, Any]) -> HttpRequest:
 
 
 def make_response(
-    spec: MethodSpec, response: HttpResponse, args: dict[str, Any]
+    spec: MethodSpec,
+    response: HttpResponse,
+    args: dict[str, Any],
 ) -> Any:
     for transformer in spec.response_transformers:
         response = transformer.transform_response(response, args)
@@ -23,12 +25,12 @@ def make_response(
 
 class SyncClient:
     def send_request(self, request: HttpRequest) -> HttpResponse:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class AsyncClient:
     async def send_request(self, request: HttpRequest) -> HttpResponse:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def apply_sync(

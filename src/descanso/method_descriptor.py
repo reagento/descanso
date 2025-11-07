@@ -1,21 +1,14 @@
+from collections.abc import Awaitable, Callable
 from typing import (
-    TypeVar,
-    Callable,
     Any,
-    ParamSpec,
     Generic,
+    ParamSpec,
+    TypeVar,
     overload,
-    Awaitable,
-    Protocol,
-    reveal_type,
 )
 
-
-from .apply import SyncClient, AsyncClient, apply_sync, apply_async
+from .apply import AsyncClient, SyncClient, apply_async, apply_sync
 from .methodspec import MethodSpec
-from .request import RequestTransformer
-from .response import ResponseTransformer
-from .signature import make_method_spec
 
 
 class BoundSyncMethod:
@@ -52,7 +45,8 @@ _MethodParamSpec = ParamSpec("_MethodParamSpec")
 
 class MethodBinder(Generic[_MethodParamSpec, _MethodResultT]):
     def __init__(
-        self, spec: MethodSpec[_MethodParamSpec, _MethodResultT]
+        self,
+        spec: MethodSpec[_MethodParamSpec, _MethodResultT],
     ) -> None:
         self._spec = spec
 
@@ -89,4 +83,4 @@ class MethodBinder(Generic[_MethodParamSpec, _MethodResultT]):
         elif isinstance(instance, AsyncClient):
             return BoundAsyncMethod(self._spec, instance)
         else:
-            raise TypeError()
+            raise TypeError

@@ -1,8 +1,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeVar, ParamSpec, Generic, Any
+from typing import Any, Generic, ParamSpec, TypeVar
 
-from .request import RequestTransformer, Field
+from .request import Field, RequestTransformer
 from .response import ResponseTransformer
 
 _MethodResultT = TypeVar("_MethodResultT")

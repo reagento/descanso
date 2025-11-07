@@ -1,15 +1,15 @@
 import json
-import re
 import string
+from collections.abc import Callable
 from inspect import getfullargspec
-from typing import Callable, Any, List, Protocol
+from typing import Any, Protocol
 
 from .request import (
-    RequestTransformer,
-    FileData,
     Field,
     FieldDestintation,
+    FileData,
     HttpRequest,
+    RequestTransformer,
 )
 
 
@@ -19,14 +19,14 @@ def _base_field_name(field_name: str) -> str:
     return field_name
 
 
-def get_params_from_string(template: str) -> List[str]:
+def get_params_from_string(template: str) -> list[str]:
     parsed_format = list(string.Formatter().parse(template))
     return [_base_field_name(x[1]) for x in parsed_format if x[1]]
 
 
 def get_params_from_callable(
     template: Callable[[dict[str, Any]], Any],
-) -> List[str]:
+) -> list[str]:
     url_template_func_arg_spec = getfullargspec(template)
     return url_template_func_arg_spec.args
 
@@ -64,11 +64,13 @@ class DestTransformer(RequestTransformer):
         return new_fields
 
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         request_field = getattr(request, self.dest.value)
         data = self.template(
-            **{k: v for k, v in fields.items() if k in self.args}
+            **{k: v for k, v in fields.items() if k in self.args},
         )
         request_field.append((self.request_key, data))
         return request
@@ -89,14 +91,18 @@ class Header(DestTransformer):
 class Extra(DestTransformer):
     def __init__(self, header: str, template: DataTemplate = None):
         super().__init__(
-            request_key=header, template=template, dest=FieldDestintation.EXTRA
+            request_key=header,
+            template=template,
+            dest=FieldDestintation.EXTRA,
         )
 
 
 class Query(DestTransformer):
     def __init__(self, header: str, template: DataTemplate = None):
         super().__init__(
-            request_key=header, template=template, dest=FieldDestintation.QUERY
+            request_key=header,
+            template=template,
+            dest=FieldDestintation.QUERY,
         )
 
 
@@ -116,7 +122,7 @@ class Url(RequestTransformer):
         fields: dict[str, Any],
     ) -> HttpRequest:
         request.url = self.template(
-            **{k: v for k, v in fields.items() if k in self.args}
+            **{k: v for k, v in fields.items() if k in self.args},
         )
         return request
 
@@ -147,7 +153,9 @@ class File(RequestTransformer):
         return new_fields
 
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         request.files.append(
             (
@@ -157,7 +165,7 @@ class File(RequestTransformer):
                     contents=fields[self.arg],
                     content_type=self.content_type,
                 ),
-            )
+            ),
         )
         return request
 
@@ -179,7 +187,9 @@ class Body(RequestTransformer):
         return new_fields
 
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         request.body = fields[self.arg]
         return request
@@ -198,7 +208,9 @@ class RetortDump(RequestTransformer):
         self.type_hint = type_hint
 
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         factory: DumperProtocol = fields["self"].request_body_factory
         request.body = factory.dump(request.body, self.type_hint)
@@ -210,7 +222,9 @@ class RetortDump(RequestTransformer):
 
 class JsonDump(RequestTransformer):
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         request.body = json.dumps(request.body)
         request.headers.append(("Content-Type", "application/json"))
@@ -225,7 +239,9 @@ class Method(RequestTransformer):
         self.method = method
 
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         request.method = self.method
         return request

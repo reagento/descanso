@@ -1,7 +1,8 @@
 import json
-from typing import Protocol, Any, Sequence
+from collections.abc import Sequence
+from typing import Any, Protocol
 
-from .response import ResponseTransformer, HttpResponse
+from .response import HttpResponse, ResponseTransformer
 
 
 class LoaderProtocol(Protocol):
@@ -18,7 +19,9 @@ class RetortLoad(ResponseTransformer):
         return response.status_code in self._codes
 
     def transform_response(
-        self, response: HttpResponse, fields: dict[str, Any]
+        self,
+        response: HttpResponse,
+        fields: dict[str, Any],
     ) -> HttpResponse:
         factory: LoaderProtocol = fields["self"].response_body_factory
         response.body = factory.load(response.body, self.type_hint)
@@ -36,7 +39,9 @@ class JsonLoad(ResponseTransformer):
         return response.status_code in self._codes
 
     def transform_response(
-        self, response: HttpResponse, fields: dict[str, Any]
+        self,
+        response: HttpResponse,
+        fields: dict[str, Any],
     ) -> HttpResponse:
         response.body = json.loads(response.body)
         return response
@@ -47,11 +52,13 @@ class JsonLoad(ResponseTransformer):
 
 class ErrorRaiser(ResponseTransformer):
     def transform_response(
-        self, response: HttpResponse, fields: dict[str, Any]
+        self,
+        response: HttpResponse,
+        fields: dict[str, Any],
     ) -> HttpResponse:
         if response.status_code >= 400:
             raise Exception(
-                f"Error: {response.status_code} {response.status_text}"
+                f"Error: {response.status_code} {response.status_text}",
             )
         return response
 
@@ -67,7 +74,9 @@ class KeepResponse(ResponseTransformer):
         return self._need_body
 
     def transform_response(
-        self, response: HttpResponse, fields: dict[str, Any]
+        self,
+        response: HttpResponse,
+        fields: dict[str, Any],
     ) -> HttpResponse:
         return HttpResponse(
             url=response.url,

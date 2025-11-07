@@ -3,14 +3,10 @@ from enum import Enum
 from typing import (
     IO,
     Any,
-    Optional,
-    Union,
+    Protocol,
     TypeAlias,
     TypeVar,
-    Callable,
-    List,
     runtime_checkable,
-    Protocol,
 )
 
 T = TypeVar("T")
@@ -20,8 +16,8 @@ KeyValueList: TypeAlias = list[KeyValue[T]]
 
 @dataclass
 class FileData:
-    contents: Union[str, IO, None]
-    content_type: Optional[str] = None
+    contents: str | IO | None
+    content_type: str | None = None
     filename: str = None
 
 
@@ -29,7 +25,7 @@ class FileData:
 class HttpRequest:
     body: Any = None
     files: KeyValueList[FileData] = field(
-        default_factory=lambda: KeyValueList()
+        default_factory=lambda: KeyValueList(),
     )
     query_params: KeyValueList[Any] = field(default_factory=list)
     headers: KeyValueList[str | bytes] = field(default_factory=list)
@@ -68,6 +64,8 @@ class RequestTransformer(Protocol):
         return fields
 
     def transform_request(
-        self, request: HttpRequest, fields: dict[str, Any]
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
     ) -> HttpRequest:
         return request

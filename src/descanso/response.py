@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
@@ -20,6 +19,8 @@ class ResponseTransformer(Protocol):
         return False
 
     def transform_response(
-        self, response: HttpResponse, fields: dict[str, Any]
+        self,
+        response: HttpResponse,
+        fields: dict[str, Any],
     ) -> HttpResponse:
         return response

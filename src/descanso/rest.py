@@ -1,14 +1,14 @@
+from collections.abc import Callable
 from typing import (
-    TypeVar,
-    Callable,
-    ParamSpec,
     Any,
+    ParamSpec,
+    TypeVar,
 )
 
 from .method_descriptor import MethodBinder
-from .request import RequestTransformer, Field, FieldDestintation
-from .request_transformers import Body, Query, RetortDump, JsonDump, Method
-from .response import ResponseTransformer, HttpResponse
+from .request import Field, FieldDestintation, RequestTransformer
+from .request_transformers import Body, JsonDump, Method, Query, RetortDump
+from .response import HttpResponse, ResponseTransformer
 from .response_transofrmers import (
     ErrorRaiser,
     JsonLoad,
@@ -31,7 +31,8 @@ def get_default_request_transformers(
 ) -> list[RequestTransformer]:
     transformers = []
     body_name = next(
-        (field.name is FieldDestintation.BODY for field in fields), None
+        (field.name is FieldDestintation.BODY for field in fields),
+        None,
     )
 
     for field in fields:
@@ -81,7 +82,9 @@ def rest(
         func: Callable[_MethodParamSpec, _MethodResultT],
     ) -> MethodBinder[_MethodParamSpec, _MethodResultT]:
         spec = make_method_spec(
-            func, transformers=transformers, is_in_class=True
+            func,
+            transformers=transformers,
+            is_in_class=True,
         )
         for transformer in spec.request_transformers:
             spec.fields = transformer.transform_fields(fields=spec.fields)
@@ -91,13 +94,13 @@ def rest(
                 default_body_name=DEFAULT_BODY_PARAM,
                 is_json=True,
                 method=method,
-            )
+            ),
         )
         spec.response_transformers.extend(
             get_default_response_transformers(
                 typehint=spec.result_type,
                 is_json=True,
-            )
+            ),
         )
 
         return MethodBinder(spec)

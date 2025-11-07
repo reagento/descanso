@@ -1,8 +1,9 @@
 import inspect
-from typing import Callable, get_type_hints, Any, Sequence
+from collections.abc import Callable, Sequence
+from typing import Any, get_type_hints
 
 from .methodspec import MethodSpec
-from .request import RequestTransformer, Field, FieldDestintation
+from .request import Field, FieldDestintation, RequestTransformer
 from .response import ResponseTransformer
 
 
@@ -16,7 +17,7 @@ def get_func_fields(func: Callable, *, is_in_class) -> list[Field]:
                 name=arg.name,
                 type_hint=hints.get(arg.name, Any),
                 dest=FieldDestintation.UNDEFINED,
-            )
+            ),
         )
     if is_in_class:
         del fields[0]
