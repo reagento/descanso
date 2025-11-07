@@ -21,7 +21,7 @@ class RetortLoad(ResponseTransformer):
         self, response: HttpResponse, fields: dict[str, Any]
     ) -> HttpResponse:
         factory: LoaderProtocol = fields["self"].response_body_factory
-        response.body = factory.load(response, self.type_hint)
+        response.body = factory.load(response.body, self.type_hint)
         return response
 
     def __repr__(self):

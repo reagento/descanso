@@ -1,6 +1,8 @@
 import logging
 import urllib.parse
 from dataclasses import dataclass
+from datetime import datetime
+from pprint import pprint
 from typing import Any
 
 import requests
@@ -38,9 +40,9 @@ class RequestsClient(SyncClient):
 @dataclass
 class MyResp:
     url: str
-    headers: Any
-    args: Any
-    origin: str
+    repository_url: str
+    id: int
+    created_at: datetime
 
 
 class MyClient:
@@ -49,7 +51,7 @@ class MyClient:
         Query("per_page", "1"),
         Header("Accept", "application/vnd.github+json"),
     )
-    def foo(self, a: str) -> Any:
+    def foo(self, a: str) -> list[MyResp]:
         pass
 
 
@@ -58,6 +60,8 @@ class MySynClient(MyClient, RequestsClient):
     request_body_factory = Retort()
     response_body_factory = Retort()
 
+
+pprint(MyClient.foo)
 
 client = MySynClient()
 response = client.foo("1")
