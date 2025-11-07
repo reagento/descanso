@@ -8,7 +8,7 @@ from typing import Any
 import requests
 from adaptix import Retort
 
-from descanso.apply import SyncClient
+from descanso.client import SyncClient
 from descanso.rest import get
 from descanso.request import HttpRequest
 from descanso.request_transformers import Header, Url, Query
