@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+import requests_mock
 from adaptix import NameStyle, Retort, dumper, name_mapping
 
 from descanso import patch
@@ -51,7 +52,7 @@ class Api(RequestsClient):
         raise NotImplementedError
 
 
-def test_body(session, mocker):
+def test_body(session, mocker: requests_mock.Mocker):
     mocker.patch(
         url="http://example.com/post/?long_param=1hello",
         text="""{"int-param": 1, "selection": "TWO"}""",

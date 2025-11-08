@@ -21,6 +21,7 @@ lint.ignore = [
     "PLR0913",
     "SIM103",
     "ISC003",
+    "PGH005", # false positive on requests_mock
 
     # identical by code != identical by meaning
     "SIM114",

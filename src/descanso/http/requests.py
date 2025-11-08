@@ -51,7 +51,6 @@ class RequestsClient(SyncClient):
         request: HttpRequest,
     ) -> Iterator[SyncResponseWrapper]:
         params=[(k, v) for k, v in request.query_params if v is not None]
-        print("param", params)
         resp = self._session.request(
             method=request.method,
             url=urllib.parse.urljoin(self._base_url, request.url),
