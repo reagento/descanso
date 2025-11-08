@@ -213,7 +213,7 @@ class Body(RequestTransformer):
 
 
 class RetortDump(RequestTransformer):
-    def __init__(self, type_hint: Any, dumper: Dumper | None) -> None:
+    def __init__(self, type_hint: Any, dumper: Dumper | None = None) -> None:
         self.type_hint = type_hint
         self.dumper = dumper
 
