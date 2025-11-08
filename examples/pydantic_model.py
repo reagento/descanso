@@ -2,13 +2,14 @@ import logging
 from typing import Optional, List
 
 from pydantic import BaseModel, TypeAdapter, ConfigDict
+from requests import Session
 
-from dataclass_rest import get, post, delete
-from dataclass_rest.client_protocol import FactoryProtocol
-from dataclass_rest.http.requests import RequestsClient
+from descanso import get, post, delete
+from descanso.client import Loader, Dumper
+from descanso.http.requests import RequestsClient
 
 
-class PydanticFactory:
+class PydanticAdapter(Loader, Dumper):
     def load(self, data, type_):
         return TypeAdapter(type_).validate_python(data)
 
@@ -35,12 +36,14 @@ class Todo(BaseModel):
 
 class RealClient(RequestsClient):
     def __init__(self):
+        adapter = PydanticAdapter()
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
+            session=Session(),
+            request_body_dumper=adapter,
+            request_params_dumper=adapter,
+            response_body_loader=adapter,
         )
-
-    def _init_request_body_factory(self) -> FactoryProtocol:
-        return PydanticFactory()
 
     @get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
