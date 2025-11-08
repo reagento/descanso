@@ -112,6 +112,17 @@ class Query(DestTransformer):
             dest=FieldDestintation.QUERY,
         )
 
+    def transform_request(
+        self,
+        request: HttpRequest,
+        fields: dict[str, Any],
+    ) -> HttpRequest:
+        if self._original_template is None and self.request_key in fields:
+            fields = fields.copy()
+            dumper = fields["self"].request_params_dumper
+            fields[self.request_key] = dumper.dump(fields[self.request_key])
+        return super().transform_request(request, fields)
+
 
 class Url(RequestTransformer):
     def __init__(self, template: Callable | str):

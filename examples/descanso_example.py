@@ -38,6 +38,7 @@ class MySyncClient(MyClient, RequestsClient):
             base_url=base_url,
             session=session,
             request_body_dumper=Retort(),
+            request_params_dumper=Retort(),
             response_body_loader=Retort(),
         )
 
@@ -48,6 +49,7 @@ class MyAsyncClient(MyClient, AiohttpClient):
             base_url=base_url,
             session=session,
             request_body_dumper=Retort(),
+            request_params_dumper=Retort(),
             response_body_loader=Retort(),
         )
 

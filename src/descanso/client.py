@@ -21,6 +21,7 @@ class BaseClient:
         self,
         transformers: Sequence[RequestTransformer | ResponseTransformer],
         request_body_dumper: Dumper,
+        request_params_dumper: Dumper,
         response_body_loader: Loader,
     ):
         self.request_transformers = [
@@ -31,6 +32,7 @@ class BaseClient:
         ]
         self.request_body_dumper = request_body_dumper
         self.response_body_loader = response_body_loader
+        self.request_params_dumper = request_params_dumper
 
 
 class SyncResponseWrapper(HttpResponse):

@@ -32,12 +32,14 @@ class RequestsClient(SyncClient):
         base_url: str,
         session: Session,
         request_body_dumper: Dumper,
+        request_params_dumper: Dumper,
         response_body_loader: Loader,
         transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
     ) -> None:
         super().__init__(
             transformers=transformers,
             request_body_dumper=request_body_dumper,
+            request_params_dumper=request_params_dumper,
             response_body_loader=response_body_loader,
         )
         self._base_url = base_url
@@ -54,6 +56,9 @@ class RequestsClient(SyncClient):
             headers=dict(request.headers),
             data=request.body,
             params=request.query_params,
-            files=request.files,
+            files=[
+                (name, (data.filename, data.contents, data.content_type))
+                for name, data in request.files
+            ],
         )
         yield RequestsResponseWrapper(resp)

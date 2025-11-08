@@ -32,12 +32,14 @@ class AiohttpClient(AsyncClient):
         base_url: str,
         session: ClientSession,
         request_body_dumper: Dumper,
+        request_params_dumper: Dumper,
         response_body_loader: Loader,
         transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
     ) -> None:
         super().__init__(
             transformers=transformers,
             request_body_dumper=request_body_dumper,
+            request_params_dumper=request_params_dumper,
             response_body_loader=response_body_loader,
         )
         self._base_url = base_url
@@ -64,6 +66,8 @@ class AiohttpClient(AsyncClient):
             url=urllib.parse.urljoin(self._base_url, request.url),
             headers=dict(request.headers),
             data=data,
-            params=request.query_params,
+            params=[
+                (k, v) for k, v in request.query_params if v is not None
+            ],
         ) as resp:
             yield AiohttpResponseWrapper(resp)
