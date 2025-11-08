@@ -78,10 +78,12 @@ class ErrorRaiser(ResponseTransformer):
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        if (self.codes is None and response.status_code >= 400) or (
+        if (
+            self.codes is None and response.status_code >= 400   # noqa: PLR2004
+        ) or (
             self.codes is not None and response.status_code in self.codes
         ):
-            if response.status_code >= 500:
+            if response.status_code >= 500:  # noqa: PLR2004
                 raise ServerError(
                     status_code=response.status_code,
                     status_text=response.status_text,

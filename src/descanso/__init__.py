@@ -1,7 +1,12 @@
 __all__ = [
-"get", "post","delete", "patch","put",
-    "Dumper","Loader",
+    "Dumper",
+    "Loader",
+    "delete",
+    "get",
+    "patch",
+    "post",
+    "put",
 ]
 
-from .rest import get, post,delete, patch,put
-from .client import Loader, Dumper
+from .client import Dumper, Loader
+from .rest import delete, get, patch, post, put
