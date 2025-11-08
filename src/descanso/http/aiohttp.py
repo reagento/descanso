@@ -27,7 +27,8 @@ class AiohttpClient(AsyncClient):
 
     @asynccontextmanager
     async def asend_request(
-        self, request: HttpRequest,
+        self,
+        request: HttpRequest,
     ) -> AsyncIterator[AsyncResponseWrapper]:
         data = request.body
         if request.files:

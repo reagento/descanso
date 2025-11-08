@@ -27,7 +27,8 @@ class RequestsClient(SyncClient):
 
     @contextmanager
     def send_request(
-        self, request: HttpRequest,
+        self,
+        request: HttpRequest,
     ) -> Iterator[SyncResponseWrapper]:
         resp = self._session.request(
             method=request.method,

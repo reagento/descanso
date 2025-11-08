@@ -29,7 +29,7 @@ class MyClient:
         Header("Accept", "application/vnd.github+json"),
     )
     def foo(self, a: str) -> list[MyResp]:
-        pass
+        raise NotImplementedError
 
 
 class MySyncClient(MyClient, RequestsClient):

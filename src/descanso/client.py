@@ -11,7 +11,8 @@ class SyncResponseWrapper(HttpResponse):
 
 class SyncClient:
     def send_request(
-        self, request: HttpRequest,
+        self,
+        request: HttpRequest,
     ) -> ContextManager[SyncResponseWrapper]:
         raise NotImplementedError
 

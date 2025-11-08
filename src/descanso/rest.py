@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from typing import (
     Any,
+    Concatenate,
     ParamSpec,
     TypeVar,
 )
@@ -75,11 +76,11 @@ def rest(
     *transformers: RequestTransformer | ResponseTransformer,
     method: str,
 ) -> Callable[
-    [Callable[_MethodParamSpec, _MethodResultT]],
+    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
     def inner(
-        func: Callable[_MethodParamSpec, _MethodResultT],
+        func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],
     ) -> MethodBinder[_MethodParamSpec, _MethodResultT]:
         spec = make_method_spec(
             func,
@@ -111,7 +112,7 @@ def rest(
 def get(
     *transformers: RequestTransformer | ResponseTransformer,
 ) -> Callable[
-    [Callable[_MethodParamSpec, _MethodResultT]],
+    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
     return rest(*transformers, method="GET")
@@ -120,7 +121,7 @@ def get(
 def post(
     *transformers: RequestTransformer | ResponseTransformer,
 ) -> Callable[
-    [Callable[_MethodParamSpec, _MethodResultT]],
+    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
     return rest(*transformers, method="POST")
