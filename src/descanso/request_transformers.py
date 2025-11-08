@@ -2,8 +2,9 @@ import json
 import string
 from collections.abc import Callable
 from inspect import getfullargspec
-from typing import Any, Protocol
+from typing import Any
 
+from .client import DumperProtocol
 from .request import (
     Field,
     FieldDestintation,
@@ -76,7 +77,13 @@ class DestTransformer(RequestTransformer):
         return request
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.request_key!r}, {self._original_template!r}, {self.dest!r})"
+        return (
+            f"{self.__class__.__name__}("
+            f"{self.request_key!r}, "
+            f"{self._original_template!r}, "
+            f"{self.dest!r}"
+            f")"
+        )
 
 
 class Header(DestTransformer):
@@ -170,7 +177,14 @@ class File(RequestTransformer):
         return request
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.arg!r}, {self.filefield!r}, {self.filename!r}, {self.content_type!r})"
+        return (
+            f"{self.__class__.__name__}("
+            f"{self.arg!r}, "
+            f"{self.filefield!r}, "
+            f"{self.filename!r}, "
+            f"{self.content_type!r}"
+            f")"
+        )
 
 
 class Body(RequestTransformer):
@@ -198,11 +212,6 @@ class Body(RequestTransformer):
         return f"{self.__class__.__name__}({self.arg!r})"
 
 
-class DumperProtocol(Protocol):
-    def dump(self, data: Any, class_: Any = None) -> Any:
-        raise NotImplementedError
-
-
 class RetortDump(RequestTransformer):
     def __init__(self, type_hint: Any) -> None:
         self.type_hint = type_hint
@@ -212,7 +221,7 @@ class RetortDump(RequestTransformer):
         request: HttpRequest,
         fields: dict[str, Any],
     ) -> HttpRequest:
-        factory: DumperProtocol = fields["self"].request_body_factory
+        factory: DumperProtocol = fields["self"].request_body_dumper
         request.body = factory.dump(request.body, self.type_hint)
         return request
 

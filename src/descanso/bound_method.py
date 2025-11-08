@@ -3,26 +3,35 @@ from typing import (
     Any,
 )
 
-from .client import AsyncClient, SyncClient
+from .client import AsyncClient, BaseClient, SyncClient
 from .methodspec import MethodSpec
 from .request import HttpRequest
 from .response import HttpResponse
 
 
-def make_request(spec: MethodSpec, args: dict[str, Any]) -> HttpRequest:
+def make_request(
+    client: BaseClient,
+    spec: MethodSpec,
+    args: dict[str, Any],
+) -> HttpRequest:
     request = HttpRequest()
     for transformer in spec.request_transformers:
+        transformer.transform_request(request, args)
+    for transformer in client.request_transformers:
         transformer.transform_request(request, args)
     return request
 
 
 def make_response(
+    client: BaseClient,
     spec: MethodSpec,
     response: HttpResponse,
     args: dict[str, Any],
 ) -> Any:
     for transformer in spec.response_transformers:
         response = transformer.transform_response(response, args)
+    for transformer in client.response_transformers:
+        transformer.transform_response(response, args)
     return response.body
 
 
@@ -43,11 +52,11 @@ class BoundSyncMethod:
 
     def __call__(self, *args, **kwargs):
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
-        request = make_request(self._spec, args)
+        request = make_request(self._client, self._spec, args)
         with self._client.send_request(request) as response:
             if need_response_body(self._spec, response):
                 response.load_body()
-        return make_response(self._spec, response, args)
+        return make_response(self._client, self._spec, response, args)
 
 
 class BoundAsyncMethod:
@@ -57,8 +66,8 @@ class BoundAsyncMethod:
 
     async def __call__(self, *args, **kwargs):
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
-        request = make_request(self._spec, args)
+        request = make_request(self._client, self._spec, args)
         async with self._client.asend_request(request) as response:
             if need_response_body(self._spec, response):
                 await response.aload_body()
-        return make_response(self._spec, response, args)
+        return make_response(self._client, self._spec, response, args)

@@ -32,6 +32,7 @@ DEFAULT_BODY_PARAM = "body"
 
 
 def get_default_request_transformers(
+    *,
     fields: list[Field],
     default_body_name: str,
     is_json: bool,
@@ -73,7 +74,7 @@ def get_default_response_transformers(
     if is_json:
         transformers.append(JsonLoad())
     if typehint is HttpResponse:
-        transformers.append(KeepResponse(False))
+        transformers.append(KeepResponse(need_body=False))
     elif typehint is not Any and typehint is not object:
         transformers.append(RetortLoad(typehint))
     return transformers

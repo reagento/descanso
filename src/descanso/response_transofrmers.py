@@ -1,13 +1,9 @@
 import json
 from collections.abc import Sequence
-from typing import Any, Protocol
+from typing import Any
 
+from .client import LoaderProtocol
 from .response import HttpResponse, ResponseTransformer
-
-
-class LoaderProtocol(Protocol):
-    def load(self, data: Any, class_: Any) -> Any:
-        raise NotImplementedError
 
 
 class RetortLoad(ResponseTransformer):
@@ -23,12 +19,15 @@ class RetortLoad(ResponseTransformer):
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        factory: LoaderProtocol = fields["self"].response_body_factory
+        factory: LoaderProtocol = fields["self"].response_body_loader
         response.body = factory.load(response.body, self.type_hint)
         return response
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.type_hint!r}, codes={self._codes!r})"
+        return (
+            f"{self.__class__.__name__}"
+            f"({self.type_hint!r}, codes={self._codes!r})"
+        )
 
 
 class JsonLoad(ResponseTransformer):
@@ -67,7 +66,7 @@ class ErrorRaiser(ResponseTransformer):
 
 
 class KeepResponse(ResponseTransformer):
-    def __init__(self, need_body: bool):
+    def __init__(self, *, need_body: bool):
         self._need_body = need_body
 
     def need_body(self, response: HttpResponse) -> bool:

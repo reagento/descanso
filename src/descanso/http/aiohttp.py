@@ -1,11 +1,17 @@
 import urllib.parse
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 
 from aiohttp import ClientResponse, ClientSession, FormData
 
-from descanso.client import AsyncClient, AsyncResponseWrapper
-from descanso.request import HttpRequest
+from descanso.client import (
+    AsyncClient,
+    AsyncResponseWrapper,
+    DumperProtocol,
+    LoaderProtocol,
+)
+from descanso.request import HttpRequest, RequestTransformer
+from descanso.response import ResponseTransformer
 
 
 class AiohttpResponseWrapper(AsyncResponseWrapper):
@@ -21,7 +27,19 @@ class AiohttpResponseWrapper(AsyncResponseWrapper):
 
 
 class AiohttpClient(AsyncClient):
-    def __init__(self, base_url: str, session: ClientSession) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        session: ClientSession,
+        request_body_dumper: DumperProtocol,
+        response_body_loader: LoaderProtocol,
+        transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
+    ) -> None:
+        super().__init__(
+            transformers=transformers,
+            request_body_dumper=request_body_dumper,
+            response_body_loader=response_body_loader,
+        )
         self._base_url = base_url
         self._session = session
 

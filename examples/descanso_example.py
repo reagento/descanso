@@ -33,13 +33,23 @@ class MyClient:
 
 
 class MySyncClient(MyClient, RequestsClient):
-    request_body_factory = Retort()
-    response_body_factory = Retort()
+    def __init__(self, base_url: str, session: Session):
+        super().__init__(
+            base_url=base_url,
+            session=session,
+            request_body_dumper=Retort(),
+            response_body_loader=Retort(),
+        )
 
 
 class MyAsyncClient(MyClient, AiohttpClient):
-    request_body_factory = Retort()
-    response_body_factory = Retort()
+    def __init__(self, base_url: str, session: ClientSession):
+        super().__init__(
+            base_url=base_url,
+            session=session,
+            request_body_dumper=Retort(),
+            response_body_loader=Retort(),
+        )
 
 
 async def main() -> None:
@@ -47,7 +57,8 @@ async def main() -> None:
 
     # sync
     client = MySyncClient(
-        base_url="https://api.github.com/", session=Session()
+        base_url="https://api.github.com/",
+        session=Session(),
     )
     response = client.foo("1")
     reveal_type(client.foo)
@@ -57,7 +68,8 @@ async def main() -> None:
     # async
     async with ClientSession() as session:
         aclient = MyAsyncClient(
-            base_url="https://api.github.com/", session=session
+            base_url="https://api.github.com/",
+            session=session,
         )
         response = await aclient.foo("1")
         reveal_type(aclient.foo)

@@ -1,11 +1,17 @@
 import urllib.parse
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 
 from requests import Response, Session
 
-from descanso.client import SyncClient, SyncResponseWrapper
-from descanso.request import HttpRequest
+from descanso.client import (
+    DumperProtocol,
+    LoaderProtocol,
+    SyncClient,
+    SyncResponseWrapper,
+)
+from descanso.request import HttpRequest, RequestTransformer
+from descanso.response import ResponseTransformer
 
 
 class RequestsResponseWrapper(SyncResponseWrapper):
@@ -21,7 +27,19 @@ class RequestsResponseWrapper(SyncResponseWrapper):
 
 
 class RequestsClient(SyncClient):
-    def __init__(self, base_url: str, session: Session) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        session: Session,
+        request_body_dumper: DumperProtocol,
+        response_body_loader: LoaderProtocol,
+        transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
+    ) -> None:
+        super().__init__(
+            transformers=transformers,
+            request_body_dumper=request_body_dumper,
+            response_body_loader=response_body_loader,
+        )
         self._base_url = base_url
         self._session = session
 
