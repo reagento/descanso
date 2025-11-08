@@ -23,11 +23,11 @@ def test_string_hints(session: requests.Session, mocker: requests_mock.Mocker):
             raise NotImplementedError
 
     mocker.get(
-        "http://example.com/items/1",
+        "https://example.com/items/1",
         text="[1, 2, 3]",
         complete_qs=True,
     )
-    mocker.post("http://example.com/items", text="1", complete_qs=True)
+    mocker.post("https://example.com/items", text="1", complete_qs=True)
 
     client = Api(session=session)
 

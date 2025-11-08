@@ -17,8 +17,8 @@ def test_methods(session: requests.Session, mocker: requests_mock.Mocker):
         def post_x(self) -> list[int]:
             raise NotImplementedError
 
-    mocker.get("http://example.com/get", text="[1,2]", complete_qs=True)
-    mocker.post("http://example.com/post", text="[1,2,3]", complete_qs=True)
+    mocker.get("https://example.com/get", text="[1,2]", complete_qs=True)
+    mocker.post("https://example.com/post", text="[1,2,3]", complete_qs=True)
     client = Api(session=session)
     assert client.get_x() == [1, 2]
     assert client.post_x() == [1, 2, 3]
@@ -30,8 +30,8 @@ def test_path_params(session: requests.Session, mocker: requests_mock.Mocker):
         def post_x(self, id) -> list[int]:
             raise NotImplementedError
 
-    mocker.post("http://example.com/post/1", text="[1]", complete_qs=True)
-    mocker.post("http://example.com/post/2", text="[1,2]", complete_qs=True)
+    mocker.post("https://example.com/post/1", text="[1]", complete_qs=True)
+    mocker.post("https://example.com/post/2", text="[1,2]", complete_qs=True)
     client = Api(session=session)
     assert client.post_x(1) == [1]
     assert client.post_x(2) == [1, 2]
@@ -44,17 +44,17 @@ def test_query_params(session: requests.Session, mocker: requests_mock.Mocker):
             raise NotImplementedError
 
     mocker.post(
-        url="http://example.com/post/x?",
+        url="https://example.com/post/x?",
         text="[0]",
         complete_qs=True,
     )
     mocker.post(
-        url="http://example.com/post/x?param=1",
+        url="https://example.com/post/x?param=1",
         text="[1]",
         complete_qs=True,
     )
     mocker.post(
-        url="http://example.com/post/x?param=2",
+        url="https://example.com/post/x?param=2",
         text="[1,2]",
         complete_qs=True,
     )
@@ -77,7 +77,7 @@ def test_body(session: requests.Session, mocker: requests_mock.Mocker):
             raise NotImplementedError
 
     mocker.post(
-        url="http://example.com/post/",
+        url="https://example.com/post/",
         text="null",
         complete_qs=True,
     )
@@ -102,12 +102,12 @@ def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
             raise NotImplementedError
 
     mocker.post(
-        url="http://example.com/post/",
+        url="https://example.com/post/",
         text="null",
         complete_qs=True,
     )
     mocker.get(
-        url="http://example.com/get/x?param=1",
+        url="https://example.com/get/x?param=1",
         text="[0]",
         complete_qs=True,
     )

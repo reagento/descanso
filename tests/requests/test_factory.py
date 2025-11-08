@@ -28,7 +28,7 @@ class ResponseBody:
 class Api(RequestsClient):
     def __init__(self, session):
         super().__init__(
-            base_url="http://example.com/",
+            base_url="https://example.com/",
             session=session,
             request_body_dumper=Retort(
                 recipe=[
@@ -54,7 +54,7 @@ class Api(RequestsClient):
 
 def test_body(session, mocker: requests_mock.Mocker):
     mocker.patch(
-        url="http://example.com/post/?long_param=1hello",
+        url="https://example.com/post/?long_param=1hello",
         text="""{"int-param": 1, "selection": "TWO"}""",
         complete_qs=True,
     )

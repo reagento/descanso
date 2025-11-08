@@ -1,11 +1,10 @@
 import logging
-from typing import Optional, List
 
-from pydantic import BaseModel, TypeAdapter, ConfigDict
+from pydantic import BaseModel, ConfigDict, TypeAdapter
 from requests import Session
 
-from descanso import get, post, delete
-from descanso.client import Loader, Dumper
+from descanso import delete, get, post
+from descanso.client import Dumper, Loader
 from descanso.http.requests import RequestsClient
 
 
@@ -18,8 +17,8 @@ class PydanticAdapter(Loader, Dumper):
 
 
 def to_camel(string: str) -> str:
-    words = string.split('_')
-    return words[0] + ''.join(word.capitalize() for word in words[1:])
+    words = string.split("_")
+    return words[0] + "".join(word.capitalize() for word in words[1:])
 
 
 class Todo(BaseModel):
@@ -50,7 +49,7 @@ class RealClient(RequestsClient):
         pass
 
     @get("todos")
-    def list_todos(self, user_id: Optional[int]) -> List[Todo]:
+    def list_todos(self, user_id: int | None) -> list[Todo]:
         pass
 
     @delete("todos/{id}")

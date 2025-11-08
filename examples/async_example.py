@@ -24,7 +24,7 @@ class Todo:
 class RealAsyncClient(AiohttpClient):
     def __init__(self, session: ClientSession):
         retort = Retort(recipe=[
-            name_mapping(name_style=NameStyle.CAMEL)
+            name_mapping(name_style=NameStyle.CAMEL),
         ])
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
@@ -36,30 +36,30 @@ class RealAsyncClient(AiohttpClient):
 
     @get("todos/{id}")
     async def get_todo(self, id: str) -> Todo:
-        pass
+        """GET method with url param"""
 
     @get("todos")
     async def list_todos(self, user_id: int | None) -> list[Todo]:
-        pass
+        """GET method with query params"""
 
     @delete("todos/{id}")
     async def delete_todo(self, id: int):
-        pass
+        """DELETE method"""
 
     @post("todos")
     async def create_todo(self, body: Todo) -> Todo:
-        """Создаем Todo"""
+        """POST method"""
 
     @get("https://httpbin.org/get")
-    def get_httpbin(self) -> Any:
-        """Используем другой base_url"""
+    async def get_httpbin(self) -> Any:
+        """Using an url different from base_url"""
 
     @post(
         "https://httpbin.org/post",
         File("file"),
     )
-    def upload_image(self, file: BytesIO):
-        """Загружаем картинку"""
+    async def upload_image(self, file: BytesIO):
+        """Sending binary data"""
 
 
 async def main():

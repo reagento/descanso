@@ -57,12 +57,12 @@ async def make_response_async(
     loaded = False
     for transformer in spec.response_transformers:
         if not loaded and transformer.need_response_body(response):
-            await response.load_body()
+            await response.aload_body()
             loaded = True
         response = transformer.transform_response(response, args)
     for transformer in client.response_transformers:
         if not loaded and transformer.need_response_body(response):
-            await response.load_body()
+            await response.aload_body()
             loaded = True
         transformer.transform_response(response, args)
     return response.body
@@ -99,7 +99,7 @@ class BoundAsyncMethod:
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
         request = make_request(self._client, self._spec, args)
         async with self._client.asend_request(request) as response:
-                return make_response_async(
+                return await make_response_async(
                     self._client,
                     self._spec,
                     response,

@@ -2,9 +2,9 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, TypeVar, Generic
+from typing import Generic, TypeVar
 
-from adaptix import Retort, dumper, Chain
+from adaptix import Chain, Retort, dumper
 from requests import Session
 
 from descanso import get
@@ -35,7 +35,7 @@ class GenderQuery(Enum):
 @dataclass
 class UsersSearchResult:
     count: int
-    items: List[User]
+    items: list[User]
 
 
 class VkClient(RequestsClient):
@@ -44,8 +44,8 @@ class VkClient(RequestsClient):
         query_dumper = Retort(recipe=[
             dumper(bool, int),
             dumper(int, str),
-            dumper(List[int], lambda d: ",".join(d), Chain.LAST),
-            dumper(List[str], lambda d: ",".join(d), Chain.LAST),
+            dumper(list[int], lambda d: ",".join(d), Chain.LAST),
+            dumper(list[str], lambda d: ",".join(d), Chain.LAST),
         ])
         body_retort = Retort()
         super(VkClient, self).__init__(
@@ -64,7 +64,7 @@ class VkClient(RequestsClient):
         self.token = token
 
     @get("users.get")
-    def get_users(self, user_ids: List[str]) -> Response[List[User]]:
+    def get_users(self, user_ids: list[str]) -> Response[list[User]]:
         pass
 
     @get("users.search")
@@ -86,5 +86,5 @@ def main():
     print(client.search_users(q="tishka17", gender=GenderQuery.MALE))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

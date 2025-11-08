@@ -27,7 +27,7 @@ def test_simple(session: requests.Session, mocker: requests_mock.Mocker):
         def get_x(self) -> list[int]:
             raise NotImplementedError
 
-    mocker.get("http://example.com/get", text="[1,2]", complete_qs=True)
+    mocker.get("https://example.com/get", text="[1,2]", complete_qs=True)
     client = Api(session=session)
     assert client.get_x() == [1, 2]
 
@@ -56,7 +56,7 @@ def test_with_param(
         def get_entry(self, entry_id: int) -> int:
             raise NotImplementedError
 
-    url = f"http://example.com/get/{expected}"
+    url = f"https://example.com/get/{expected}"
     mocker.get(url, text=str(expected), complete_qs=True)
 
     client = Api(session=session)
@@ -72,7 +72,7 @@ def test_excess_param(session: requests.Session, mocker: requests_mock.Mocker):
             raise NotImplementedError
 
     mocker.get(
-        "http://example.com/get/1?some_param=2", text="1", complete_qs=True,
+        "https://example.com/get/1?some_param=2", text="1", complete_qs=True,
     )
 
     client = Api(session=session)
@@ -85,8 +85,8 @@ def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
         def get_entry(self, *, entry_id: int | None = None) -> int:
             raise NotImplementedError
 
-    mocker.get("http://example.com/get/1", text="1", complete_qs=True)
-    mocker.get("http://example.com/get/random", text="2", complete_qs=True)
+    mocker.get("https://example.com/get/1", text="1", complete_qs=True)
+    mocker.get("https://example.com/get/random", text="2", complete_qs=True)
 
     client = Api(session=session)
     assert client.get_entry(entry_id=1) == 1

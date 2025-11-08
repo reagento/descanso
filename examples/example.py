@@ -1,12 +1,12 @@
 import logging
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Optional, List
+from typing import Any
 
-from adaptix import Retort, name_mapping, NameStyle
+from adaptix import NameStyle, Retort, name_mapping
 from requests import Session
 
-from descanso import get, post, delete
+from descanso import delete, get, post
 from descanso.http.requests import RequestsClient
 from descanso.request_transformers import File
 
@@ -22,7 +22,7 @@ class Todo:
 class RealClient(RequestsClient):
     def __init__(self):
         retort = Retort(recipe=[
-            name_mapping(name_style=NameStyle.CAMEL)
+            name_mapping(name_style=NameStyle.CAMEL),
         ])
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
@@ -34,30 +34,30 @@ class RealClient(RequestsClient):
 
     @get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
-        pass
+        """GET method with url param"""
 
     @get("todos")
-    def list_todos(self, user_id: Optional[int]) -> List[Todo]:
-        pass
+    def list_todos(self, user_id: int | None) -> list[Todo]:
+        """GET method with query params"""
 
     @delete("todos/{id}")
     def delete_todo(self, id: int):
-        pass
+        """DELETE method"""
 
     @post("todos")
-    def create_todo(self, body: Todo) -> Todo:
-        """Создаем Todo"""
+    async def create_todo(self, body: Todo) -> Todo:
+        """POST method"""
 
     @get("https://httpbin.org/get")
-    def get_httpbin(self):
-        """Используем другой base_url"""
+    def get_httpbin(self) -> Any:
+        """Using an url different from base_url"""
 
     @post(
         "https://httpbin.org/post",
-        File("file")
+        File("file"),
     )
     def upload_image(self, file: BytesIO):
-        """Загружаем картинку"""
+        """Sending binary data"""
 
 
 logging.basicConfig(level=logging.INFO)

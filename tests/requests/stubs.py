@@ -20,7 +20,7 @@ class StubConverter(Loader, Dumper):
 class StubRequestsClient(RequestsClient):
     def __init__(self, session: requests.Session):
         super().__init__(
-            base_url="http://example.com",
+            base_url="https://example.com",
             session=session,
             request_body_dumper=StubConverter(),
             response_body_loader=StubConverter(),
