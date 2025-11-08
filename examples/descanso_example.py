@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from pprint import pprint
+from typing import reveal_type
 
 from adaptix import Retort
 from aiohttp import ClientSession
@@ -49,14 +50,18 @@ async def main() -> None:
         base_url="https://api.github.com/", session=Session()
     )
     response = client.foo("1")
+    reveal_type(client.foo)
+    reveal_type(response)
     print(response)
 
     # async
     async with ClientSession() as session:
-        client = MyAsyncClient(
+        aclient = MyAsyncClient(
             base_url="https://api.github.com/", session=session
         )
-        response = await client.foo("1")
+        response = await aclient.foo("1")
+        reveal_type(aclient.foo)
+        reveal_type(response)
         print(response)
 
 
