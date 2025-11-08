@@ -44,7 +44,7 @@ class DestTransformer(RequestTransformer):
     ) -> None:
         self._original_template = template
         if template is None:
-            self.template = f"{{{request_key}}}".format
+            self.template = lambda **kwargs: kwargs[request_key]
             self.args = [request_key]
         elif isinstance(template, str):
             self.template = template.format
@@ -136,6 +136,15 @@ class Url(RequestTransformer):
         else:
             self.template = template
             self.args = get_params_from_callable(template)
+
+    def transform_fields(self, fields: list[Field]) -> list[Field]:
+        new_fields = []
+        for field in fields:
+            if field.name in self.args:
+                new_fields.append(field.replace_dest(FieldDestintation.URL))
+            else:
+                new_fields.append(field)
+        return new_fields
 
     def transform_request(
         self,

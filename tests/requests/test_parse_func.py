@@ -1,26 +1,25 @@
 from dataclasses import dataclass
-from typing import List, Optional
 
 import requests
 import requests_mock
 
-from dataclass_rest import get, post
-from dataclass_rest.http.requests import RequestsClient
+from descanso import get, post
+from .stubs import StubRequestsClient
 
 
 @dataclass
-class TestBody:
+class ExampleBody:
     value: int
 
 
 def test_string_hints(session: requests.Session, mocker: requests_mock.Mocker):
-    class Api(RequestsClient):
+    class Api(StubRequestsClient):
         @get("/items/{item_id}")
-        def get_item(self, item_id: "str") -> "List[int]":
+        def get_item(self, item_id: "str") -> "list[int]":
             raise NotImplementedError
 
         @post("/items")
-        def create_item(self, body: "TestBody") -> "Optional[int]":
+        def create_item(self, body: ExampleBody) -> "int | None":
             raise NotImplementedError
 
     mocker.get(
@@ -30,7 +29,7 @@ def test_string_hints(session: requests.Session, mocker: requests_mock.Mocker):
     )
     mocker.post("http://example.com/items", text="1", complete_qs=True)
 
-    client = Api(base_url="http://example.com", session=session)
+    client = Api(session=session)
 
     assert client.get_item("1") == [1, 2, 3]
-    assert client.create_item(TestBody(value=5)) == 1
+    assert client.create_item(ExampleBody(value=5)) == 1

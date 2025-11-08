@@ -1,7 +1,7 @@
 import pytest
 import requests_mock
 
-from dataclass_rest.http import requests
+from descanso.http import requests
 
 
 @pytest.fixture
@@ -16,3 +16,4 @@ def mocker(session):
         case_sensitive=True,
     ) as session_mock:
         yield session_mock
+

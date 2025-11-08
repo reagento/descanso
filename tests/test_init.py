@@ -1,17 +1,26 @@
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
-from adaptix import NameStyle, Retort, name_mapping
+from aiohttp import ClientSession
 from requests import Session
 
-from dataclass_rest import get
-from dataclass_rest.http.aiohttp import AiohttpClient
-from dataclass_rest.http.requests import RequestsClient
+from descanso import Dumper, Loader, get
+from descanso.http.aiohttp import AiohttpClient
+from descanso.http.requests import RequestsClient
 
 
 @dataclass
 class Todo:
     id: int
+
+
+class StubConverter(Loader, Dumper):
+    def load(self, data: Any, class_: Any) -> Any:
+        return data
+
+    def dump(self, data: Any, class_: Any) -> Any:
+        return data
 
 
 def test_sync():
@@ -20,13 +29,9 @@ def test_sync():
             super().__init__(
                 "https://jsonplaceholder.typicode.com/",
                 Session(),
-            )
-
-        def _init_request_body_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.CAMEL),
-                ],
+                request_body_dumper=StubConverter(),
+                request_params_dumper=StubConverter(),
+                response_body_loader=StubConverter(),
             )
 
         @get("todos/{id}")
@@ -40,18 +45,20 @@ def test_sync():
 async def test_async():
     class RealClient(AiohttpClient):
         def __init__(self):
-            super().__init__("https://jsonplaceholder.typicode.com/")
-
-        def _init_request_body_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.CAMEL),
-                ],
+            super().__init__(
+                "https://jsonplaceholder.typicode.com/",
+                ClientSession(),
+                request_body_dumper=StubConverter(),
+                request_params_dumper=StubConverter(),
+                response_body_loader=StubConverter(),
             )
 
         @get("todos/{id}")
         async def get_todo(self, id: str) -> Todo:
             pass
 
+        async def close(self):
+            await self._session.close()
+
     client = RealClient()
-    await client.session.close()
+    await client.close()
