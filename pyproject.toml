@@ -9,7 +9,7 @@ include-package-data = true
 where = ["src"]
 
 [project]
-name = "dataclass_rest"
+name = "descanso"
 version = "0.4"
 readme = "README.md"
 authors = [
@@ -17,7 +17,7 @@ authors = [
 ]
 license = { text = "Apache-2.0" }
 description = "An utility for writing simple clients for REST like APIs"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries",
@@ -25,9 +25,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-]
-dependencies = [
-    "adaptix",
 ]
 
 [project.urls]
