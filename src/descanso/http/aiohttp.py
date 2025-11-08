@@ -7,8 +7,8 @@ from aiohttp import ClientResponse, ClientSession, FormData
 from descanso.client import (
     AsyncClient,
     AsyncResponseWrapper,
-    DumperProtocol,
-    LoaderProtocol,
+    Dumper,
+    Loader,
 )
 from descanso.request import HttpRequest, RequestTransformer
 from descanso.response import ResponseTransformer
@@ -31,8 +31,8 @@ class AiohttpClient(AsyncClient):
         self,
         base_url: str,
         session: ClientSession,
-        request_body_dumper: DumperProtocol,
-        response_body_loader: LoaderProtocol,
+        request_body_dumper: Dumper,
+        response_body_loader: Loader,
         transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
     ) -> None:
         super().__init__(

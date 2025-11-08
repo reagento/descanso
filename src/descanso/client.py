@@ -6,12 +6,12 @@ from descanso.request import HttpRequest, RequestTransformer
 from descanso.response import HttpResponse, ResponseTransformer
 
 
-class DumperProtocol(Protocol):
+class Dumper(Protocol):
     def dump(self, data: Any, class_: Any = None) -> Any:
         raise NotImplementedError
 
 
-class LoaderProtocol(Protocol):
+class Loader(Protocol):
     def load(self, data: Any, class_: Any) -> Any:
         raise NotImplementedError
 
@@ -20,8 +20,8 @@ class BaseClient:
     def __init__(
         self,
         transformers: Sequence[RequestTransformer | ResponseTransformer],
-        request_body_dumper: DumperProtocol,
-        response_body_loader: LoaderProtocol,
+        request_body_dumper: Dumper,
+        response_body_loader: Loader,
     ):
         self.request_transformers = [
             r for r in transformers if isinstance(r, RequestTransformer)

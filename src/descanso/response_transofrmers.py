@@ -2,46 +2,56 @@ import json
 from collections.abc import Sequence
 from typing import Any
 
-from .client import LoaderProtocol
+from .client import Loader
 from .response import HttpResponse, ResponseTransformer
 
 
 class RetortLoad(ResponseTransformer):
-    def __init__(self, type_hint: Any, codes: Sequence[int] = (200,)) -> None:
+    def __init__(
+        self,
+        type_hint: Any,
+        codes: Sequence[int] = (200,),
+        loader: Loader | None = None,
+    ) -> None:
         self.type_hint = type_hint
-        self._codes = codes
+        self.codes = codes
+        self.loader = loader
 
     def need_response_body(self, response: HttpResponse) -> bool:
-        return response.status_code in self._codes
+        return response.status_code in self.codes
 
     def transform_response(
         self,
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        factory: LoaderProtocol = fields["self"].response_body_loader
-        response.body = factory.load(response.body, self.type_hint)
+        if response.status_code not in self.codes:
+            return response
+        loader = self.loader or fields["self"].response_body_loader
+        response.body = loader.load(response.body, self.type_hint)
         return response
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}"
-            f"({self.type_hint!r}, codes={self._codes!r})"
+            f"({self.type_hint!r}, codes={self.codes!r})"
         )
 
 
 class JsonLoad(ResponseTransformer):
     def __init__(self, codes: Sequence[int] = (200,)):
-        self._codes = codes
+        self.codes = codes
 
     def need_response_body(self, response: HttpResponse) -> bool:
-        return response.status_code in self._codes
+        return response.status_code in self.codes
 
     def transform_response(
         self,
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
+        if response.status_code not in self.codes:
+            return response
         response.body = json.loads(response.body)
         return response
 

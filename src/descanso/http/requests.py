@@ -5,8 +5,8 @@ from contextlib import contextmanager
 from requests import Response, Session
 
 from descanso.client import (
-    DumperProtocol,
-    LoaderProtocol,
+    Dumper,
+    Loader,
     SyncClient,
     SyncResponseWrapper,
 )
@@ -31,8 +31,8 @@ class RequestsClient(SyncClient):
         self,
         base_url: str,
         session: Session,
-        request_body_dumper: DumperProtocol,
-        response_body_loader: LoaderProtocol,
+        request_body_dumper: Dumper,
+        response_body_loader: Loader,
         transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
     ) -> None:
         super().__init__(

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from inspect import getfullargspec
 from typing import Any
 
-from .client import DumperProtocol
+from .client import Dumper
 from .request import (
     Field,
     FieldDestintation,
@@ -213,16 +213,17 @@ class Body(RequestTransformer):
 
 
 class RetortDump(RequestTransformer):
-    def __init__(self, type_hint: Any) -> None:
+    def __init__(self, type_hint: Any, dumper: Dumper | None) -> None:
         self.type_hint = type_hint
+        self.dumper = dumper
 
     def transform_request(
         self,
         request: HttpRequest,
         fields: dict[str, Any],
     ) -> HttpRequest:
-        factory: DumperProtocol = fields["self"].request_body_dumper
-        request.body = factory.dump(request.body, self.type_hint)
+        dumper = self.dumper or fields["self"].request_body_dumper
+        request.body = dumper.dump(request.body, self.type_hint)
         return request
 
     def __repr__(self):
