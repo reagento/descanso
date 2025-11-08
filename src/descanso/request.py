@@ -24,9 +24,7 @@ class FileData:
 @dataclass
 class HttpRequest:
     body: Any = None
-    files: KeyValueList[FileData] = field(
-        default_factory=lambda: KeyValueList(),
-    )
+    files: KeyValueList[FileData] = field(default_factory=list)
     query_params: KeyValueList[Any] = field(default_factory=list)
     headers: KeyValueList[str | bytes] = field(default_factory=list)
     extras: KeyValueList[Any] = field(default_factory=list)

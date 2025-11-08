@@ -138,15 +138,15 @@ class MyClient(RequestsClient):
 
     @jsonrpc("eth_getTransactionByHash")
     def get_transaction_by_hash(self, body: list[str]) -> Transaction:
-        pass
+        """Get transaction"""
 
     @jsonrpc("net_version")
     def net_version(self) -> str:
-        pass
+        """Retrieve net version"""
 
     @jsonrpc("eth_blockNumber")
     def eth_block_number(self) -> str:
-        pass
+        """Retrieve block number"""
 
 
 logging.basicConfig(level=logging.INFO)

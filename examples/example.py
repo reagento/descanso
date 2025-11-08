@@ -34,7 +34,7 @@ class RealClient(RequestsClient):
 
     @get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
-        """GET method with url param"""
+        """GET method with path param"""
 
     @get("todos")
     def list_todos(self, user_id: int | None) -> list[Todo]:
@@ -50,7 +50,7 @@ class RealClient(RequestsClient):
 
     @get("https://httpbin.org/get")
     def get_httpbin(self) -> Any:
-        """Using an url different from base_url"""
+        """Url different from base_url"""
 
     @post(
         "https://httpbin.org/post",

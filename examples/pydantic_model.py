@@ -46,23 +46,23 @@ class RealClient(RequestsClient):
 
     @get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
-        pass
+        """GET method with path param"""
 
     @get("todos")
     def list_todos(self, user_id: int | None) -> list[Todo]:
-        pass
+        """GET method with query params"""
 
     @delete("todos/{id}")
     def delete_todo(self, id: int):
-        pass
+        """DELETE method"""
 
     @post("todos")
     def create_todo(self, body: Todo) -> Todo:
-        """Create Todo"""
+        """POST method"""
 
     @get("https://httpbin.org/get")
     def get_httpbin(self):
-        """Request with different base_url"""
+        """Url different from base_url"""
 
 
 logging.basicConfig(level=logging.INFO)
