@@ -7,7 +7,7 @@ from descanso.response import HttpResponse, ResponseTransformer
 
 
 class Dumper(Protocol):
-    def dump(self, data: Any, class_: Any = None) -> Any:
+    def dump(self, data: Any, class_: Any) -> Any:
         raise NotImplementedError
 
 

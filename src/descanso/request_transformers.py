@@ -119,8 +119,11 @@ class Query(DestTransformer):
     ) -> HttpRequest:
         if self._original_template is None and self.request_key in fields:
             fields = fields.copy()
-            dumper = fields["self"].request_params_dumper
-            fields[self.request_key] = dumper.dump(fields[self.request_key])
+            dumper: Dumper = fields["self"].request_params_dumper
+            fields[self.request_key] = dumper.dump(
+                fields[self.request_key],
+                type(fields[self.request_key]),
+            )
         return super().transform_request(request, fields)
 
 
@@ -152,12 +155,12 @@ class File(RequestTransformer):
     def __init__(
         self,
         arg: str,
-        filefield: str,
+        filefield: str | None = None,
         filename: str | None = None,
         content_type: str | None = None,
     ):
         self.arg = arg
-        self.filefield = filefield
+        self.filefield = filefield or arg
         self.filename = filename
         self.content_type = content_type
 

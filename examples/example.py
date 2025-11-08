@@ -1,11 +1,14 @@
 import logging
 from dataclasses import dataclass
+from io import BytesIO
 from typing import Optional, List
 
 from adaptix import Retort, name_mapping, NameStyle
+from requests import Session
 
-from dataclass_rest import get, post, delete, File
-from dataclass_rest.http.requests import RequestsClient
+from descanso import get, post, delete
+from descanso.http.requests import RequestsClient
+from descanso.request_transformers import File
 
 
 @dataclass
@@ -20,12 +23,15 @@ class RealClient(RequestsClient):
     def __init__(self):
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
+            session=Session(),
+            request_body_dumper=Retort(recipe=[
+                name_mapping(name_style=NameStyle.CAMEL)
+            ]),
+            request_params_dumper=Retort(),
+            response_body_loader=Retort(recipe=[
+                name_mapping(name_style=NameStyle.CAMEL)
+            ]),
         )
-
-    def _init_request_body_factory(self) -> Retort:
-        return Retort(recipe=[
-            name_mapping(name_style=NameStyle.CAMEL),
-        ])
 
     @get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
@@ -47,8 +53,11 @@ class RealClient(RequestsClient):
     def get_httpbin(self):
         """Используем другой base_url"""
 
-    @post("https://httpbin.org/post")
-    def upload_image(self, file: File):
+    @post(
+        "https://httpbin.org/post",
+        File("file")
+    )
+    def upload_image(self, file: BytesIO):
         """Загружаем картинку"""
 
 
@@ -59,4 +68,5 @@ print(client.get_todo(id="1"))
 print(client.delete_todo(1))
 print(client.create_todo(Todo(123456789, 111222333, "By Tishka17", False)))
 print(client.get_httpbin())
-print(client.upload_image(File(open("example.py", "rb"))))
+with open("example.py", "rb") as f:
+    print(client.upload_image(f))
