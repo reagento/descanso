@@ -10,13 +10,13 @@ A modern and simple way to create clients for REST like APIs
 ## Quickstart
 
 
-Step 1. Install
+**Step 1.** Install
 ```bash
 pip install descanso requests
 ```
 
 
-Step 2. Declare models
+**Step 2.** Declare models
 
 ```python
 from dataclasses import dataclass
@@ -29,12 +29,12 @@ class Todo:
     completed: bool
 ```
 
-Step 3. Select serialization library. We recommend using `adaptix`.
+**Step 3.** Select serialization library. We recommend using `adaptix`.
 
 You need to have `Loader` and `Dumper` implementations, `adaptix.Retort` would be fine
 
 
-Step 4. Create and configure client
+**Step 4.** Create and configure client
 
 ```python
 from adaptix import Retort
@@ -52,7 +52,7 @@ class RealClient(RequestsClient):
         )
 ```
 
-Step 5. Declare methods using `get`/`post`/`delete`/`patch`/`put` decorators.
+**Step 5.** Declare methods using `get`/`post`/`delete`/`patch`/`put` decorators.
 Type hints are required. Body of method is ignored.
 
 Use any method arguments to format URL.
