@@ -65,7 +65,7 @@ class VkClient(RequestsClient):
 
     @get("users.get")
     def get_users(self, user_ids: list[str]) -> Response[list[User]]:
-        pass
+        """Get users by their ids"""
 
     @get("users.search")
     def search_users(
@@ -73,7 +73,7 @@ class VkClient(RequestsClient):
             offset: int = 0, count: int = 20,
             gender: GenderQuery = GenderQuery.ANY,
     ) -> Response[UsersSearchResult]:
-        pass
+        """Search users with pagination"""
 
 
 TOKEN = os.getenv("VK_TOKEN")
