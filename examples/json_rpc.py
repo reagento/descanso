@@ -42,7 +42,7 @@ class PackJsonRPC(RequestTransformer):
 
 class UnpackJsonRPC(ResponseTransformer):
     def need_response_body(self, response: HttpResponse) -> bool:
-        return response.status_code == 200
+        return True
 
     def transform_response(
         self,
@@ -54,6 +54,9 @@ class UnpackJsonRPC(ResponseTransformer):
 
 
 class JsonRPCError(ResponseTransformer):
+    def need_response_body(self, response: HttpResponse) -> bool:
+        return True
+
     def transform_response(
         self,
         response: HttpResponse,
