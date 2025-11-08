@@ -10,8 +10,10 @@ class HttpStatusError(RuntimeError):
     def __repr__(self):
         return (
             f"{self.__class__.__name__}"
-            f"({self.status_code}, {self.status_text}, {self.body})"
+            f"({self.status_code}, {self.status_text!r}, {self.body!r})"
         )
+
+    __str__ = __repr__
 
 
 class ClientError(HttpStatusError):
