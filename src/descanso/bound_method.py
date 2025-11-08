@@ -3,7 +3,13 @@ from typing import (
     Any,
 )
 
-from .client import AsyncClient, BaseClient, SyncClient
+from .client import (
+    AsyncClient,
+    AsyncResponseWrapper,
+    BaseClient,
+    SyncClient,
+    SyncResponseWrapper,
+)
 from .method_spec import MethodSpec
 from .request import HttpRequest
 from .response import HttpResponse
@@ -22,15 +28,42 @@ def make_request(
     return request
 
 
-def make_response(
+def make_response_sync(
     client: BaseClient,
     spec: MethodSpec,
-    response: HttpResponse,
+    response: SyncResponseWrapper,
     args: dict[str, Any],
 ) -> Any:
+    loaded = False
     for transformer in spec.response_transformers:
+        if not loaded and transformer.need_response_body(response):
+            response.load_body()
+            loaded = True
         response = transformer.transform_response(response, args)
     for transformer in client.response_transformers:
+        if not loaded and transformer.need_response_body(response):
+            response.load_body()
+            loaded = True
+        transformer.transform_response(response, args)
+    return response.body
+
+
+async def make_response_async(
+    client: BaseClient,
+    spec: MethodSpec,
+    response: AsyncResponseWrapper,
+    args: dict[str, Any],
+) -> Any:
+    loaded = False
+    for transformer in spec.response_transformers:
+        if not loaded and transformer.need_response_body(response):
+            await response.load_body()
+            loaded = True
+        response = transformer.transform_response(response, args)
+    for transformer in client.response_transformers:
+        if not loaded and transformer.need_response_body(response):
+            await response.load_body()
+            loaded = True
         transformer.transform_response(response, args)
     return response.body
 
@@ -54,9 +87,7 @@ class BoundSyncMethod:
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
         request = make_request(self._client, self._spec, args)
         with self._client.send_request(request) as response:
-            if need_response_body(self._spec, response):
-                response.load_body()
-        return make_response(self._client, self._spec, response, args)
+            return make_response_sync(self._client, self._spec, response, args)
 
 
 class BoundAsyncMethod:
@@ -68,6 +99,9 @@ class BoundAsyncMethod:
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
         request = make_request(self._client, self._spec, args)
         async with self._client.asend_request(request) as response:
-            if need_response_body(self._spec, response):
-                await response.aload_body()
-        return make_response(self._client, self._spec, response, args)
+                return make_response_async(
+                    self._client,
+                    self._spec,
+                    response,
+                    args,
+                )
