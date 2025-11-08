@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from .client import Loader
+from .exceptions import ClientError, ServerError
 from .response import HttpResponse, ResponseTransformer
 
 
@@ -60,14 +61,37 @@ class JsonLoad(ResponseTransformer):
 
 
 class ErrorRaiser(ResponseTransformer):
+    def __init__(
+        self,
+        *,
+        codes: Sequence[int] | None = None,
+        need_body: bool = False,
+    ) -> None:
+        self._need_body = need_body
+        self.codes = codes
+
+    def need_response_body(self, response: HttpResponse) -> bool:
+        return self._need_body
+
     def transform_response(
         self,
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        if response.status_code >= 400:
-            raise Exception(
-                f"Error: {response.status_code} {response.status_text}",
+        if (self.codes is None and response.status_code >= 400) or (
+            self.codes is not None and response.status_code in self.codes
+        ):
+            if response.status_code >= 500:
+                raise ServerError(
+                    status_code=response.status_code,
+                    status_text=response.status_text,
+                    body=response.body,
+                )
+
+            raise ClientError(
+                status_code=response.status_code,
+                status_text=response.status_text,
+                body=response.body,
             )
         return response
 

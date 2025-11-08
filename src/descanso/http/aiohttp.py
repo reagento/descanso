@@ -66,8 +66,6 @@ class AiohttpClient(AsyncClient):
             url=urllib.parse.urljoin(self._base_url, request.url),
             headers=dict(request.headers),
             data=data,
-            params=[
-                (k, v) for k, v in request.query_params if v is not None
-            ],
+            params=[(k, v) for k, v in request.query_params if v is not None],
         ) as resp:
             yield AiohttpResponseWrapper(resp)
