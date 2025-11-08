@@ -23,16 +23,15 @@ class Todo:
 
 class RealAsyncClient(AiohttpClient):
     def __init__(self, session: ClientSession):
+        retort = Retort(recipe=[
+            name_mapping(name_style=NameStyle.CAMEL)
+        ])
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
             session=session,
-            request_body_dumper=Retort(recipe=[
-                name_mapping(name_style=NameStyle.CAMEL),
-            ]),
+            request_body_dumper=retort,
             request_params_dumper=Retort(),
-            response_body_loader=Retort(recipe=[
-                name_mapping(name_style=NameStyle.CAMEL),
-            ]),
+            response_body_loader=retort,
         )
 
     @get("todos/{id}")
