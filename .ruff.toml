@@ -1,5 +1,5 @@
 line-length = 79
-target-version="py38"
+target-version="py311"
 src = ["src"]
 
 include = ["src/**.py", "tests/**.py"]

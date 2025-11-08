@@ -31,6 +31,16 @@ def make_response(
     return response.body
 
 
+def need_response_body(
+    spec: MethodSpec,
+    response: HttpResponse,
+) -> bool:
+    for transformer in spec.response_transformers:
+        if transformer.need_response_body(response):
+            return True
+    return False
+
+
 class BoundSyncMethod:
     def __init__(self, spec: MethodSpec, client: SyncClient) -> None:
         self._spec = spec
@@ -39,8 +49,9 @@ class BoundSyncMethod:
     def __call__(self, *args, **kwargs):
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
         request = make_request(self._spec, args)
-        response = self._client.send_request(request)
-        # TODO read body
+        with self._client.send_request(request) as response:
+            if need_response_body(self._spec, response):
+                response.load_body()
         return make_response(self._spec, response, args)
 
 
@@ -52,8 +63,9 @@ class BoundAsyncMethod:
     async def __call__(self, *args, **kwargs):
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
         request = make_request(self._spec, args)
-        response = await self._client.asend_request(request)
-        # TODO read body
+        async with self._client.asend_request(request) as response:
+            if need_response_body(self._spec, response):
+                await response.aload_body()
         return make_response(self._spec, response, args)
 
 
