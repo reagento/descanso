@@ -33,7 +33,7 @@ class MyClient:
 
 
 class MySyncClient(MyClient, RequestsClient):
-    def __init__(self, base_url: str, session: Session):
+    def __init__(self, base_url: str, session: Session) -> None:
         super().__init__(
             base_url=base_url,
             session=session,
@@ -44,7 +44,7 @@ class MySyncClient(MyClient, RequestsClient):
 
 
 class MyAsyncClient(MyClient, AiohttpClient):
-    def __init__(self, base_url: str, session: ClientSession):
+    def __init__(self, base_url: str, session: ClientSession) -> None:
         super().__init__(
             base_url=base_url,
             session=session,

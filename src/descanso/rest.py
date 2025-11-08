@@ -1,9 +1,11 @@
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import (
     Any,
     Concatenate,
     ParamSpec,
+    Protocol,
     TypeVar,
+    overload,
 )
 
 from .method_descriptor import MethodBinder
@@ -24,9 +26,6 @@ from .response_transofrmers import (
     RetortLoad,
 )
 from .signature import make_method_spec
-
-_MethodResultT = TypeVar("_MethodResultT")
-_MethodParamSpec = ParamSpec("_MethodParamSpec")
 
 DEFAULT_BODY_PARAM = "body"
 
@@ -80,14 +79,35 @@ def get_default_response_transformers(
     return transformers
 
 
+_MethodResultT = TypeVar("_MethodResultT")
+_MethodParamSpec = ParamSpec("_MethodParamSpec")
+
+
+class Decorator(Protocol):
+    @overload
+    def __call__(
+        self,
+        func: Callable[
+            Concatenate[Any, _MethodParamSpec],
+            Awaitable[_MethodResultT],
+        ],
+    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
+
+    @overload
+    def __call__(
+        self,
+        func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],
+    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
+
+    def __call__(self, *args, **kwargs):
+        raise NotImplementedError
+
+
 def rest(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
     method: str,
-) -> Callable[
-    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
-    MethodBinder[_MethodParamSpec, _MethodResultT],
-]:
+) -> Decorator:
     if not isinstance(url, Url):
         url = Url(url)
     transformers = (url, *transformers)
@@ -125,48 +145,33 @@ def rest(
 def get(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
-) -> Callable[
-    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
-    MethodBinder[_MethodParamSpec, _MethodResultT],
-]:
+) -> Decorator:
     return rest(url, *transformers, method="GET")
 
 
 def post(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
-) -> Callable[
-    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
-    MethodBinder[_MethodParamSpec, _MethodResultT],
-]:
+) -> Decorator:
     return rest(url, *transformers, method="POST")
 
 
 def put(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
-) -> Callable[
-    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
-    MethodBinder[_MethodParamSpec, _MethodResultT],
-]:
+) -> Decorator:
     return rest(url, *transformers, method="PUT")
 
 
 def patch(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
-) -> Callable[
-    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
-    MethodBinder[_MethodParamSpec, _MethodResultT],
-]:
+) -> Decorator:
     return rest(url, *transformers, method="PATCH")
 
 
 def delete(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
-) -> Callable[
-    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
-    MethodBinder[_MethodParamSpec, _MethodResultT],
-]:
+) -> Decorator:
     return rest(url, *transformers, method="DELETE")
