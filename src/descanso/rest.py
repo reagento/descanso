@@ -140,3 +140,33 @@ def post(
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
     return rest(url, *transformers, method="POST")
+
+
+def put(
+    url: str | Callable | Url,
+    *transformers: RequestTransformer | ResponseTransformer,
+) -> Callable[
+    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
+    MethodBinder[_MethodParamSpec, _MethodResultT],
+]:
+    return rest(url, *transformers, method="PUT")
+
+
+def patch(
+    url: str | Callable | Url,
+    *transformers: RequestTransformer | ResponseTransformer,
+) -> Callable[
+    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
+    MethodBinder[_MethodParamSpec, _MethodResultT],
+]:
+    return rest(url, *transformers, method="PATCH")
+
+
+def delete(
+    url: str | Callable | Url,
+    *transformers: RequestTransformer | ResponseTransformer,
+) -> Callable[
+    [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
+    MethodBinder[_MethodParamSpec, _MethodResultT],
+]:
+    return rest(url, *transformers, method="DELETE")

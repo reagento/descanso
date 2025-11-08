@@ -2,23 +2,22 @@ import inspect
 from collections.abc import Callable, Sequence
 from typing import Any, get_type_hints
 
-from .methodspec import MethodSpec
+from .method_spec import MethodSpec
 from .request import Field, FieldDestintation, RequestTransformer
 from .response import ResponseTransformer
 
 
 def get_func_fields(func: Callable, *, is_in_class) -> list[Field]:
-    fields = []
     signature = inspect.signature(func)
     hints = get_type_hints(func)
-    for arg in signature.parameters.values():
-        fields.append(
-            Field(
-                name=arg.name,
-                type_hint=hints.get(arg.name, Any),
-                dest=FieldDestintation.UNDEFINED,
-            ),
+    fields = [
+        Field(
+            name=arg.name,
+            type_hint=hints.get(arg.name, Any),
+            dest=FieldDestintation.UNDEFINED,
         )
+        for arg in signature.parameters.values()
+    ]
     if is_in_class:
         del fields[0]
     return fields

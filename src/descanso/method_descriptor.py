@@ -10,7 +10,7 @@ from typing import (
 
 from .bound_method import BoundAsyncMethod, BoundSyncMethod
 from .client import AsyncClient, SyncClient
-from .methodspec import MethodSpec
+from .method_spec import MethodSpec
 
 _MethodResultT = TypeVar("_MethodResultT")
 _MethodParamSpec = ParamSpec("_MethodParamSpec")

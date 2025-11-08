@@ -4,7 +4,7 @@ from typing import (
 )
 
 from .client import AsyncClient, BaseClient, SyncClient
-from .methodspec import MethodSpec
+from .method_spec import MethodSpec
 from .request import HttpRequest
 from .response import HttpResponse
 
