@@ -8,7 +8,14 @@ from typing import (
 
 from .method_descriptor import MethodBinder
 from .request import Field, FieldDestintation, RequestTransformer
-from .request_transformers import Body, JsonDump, Method, Query, RetortDump
+from .request_transformers import (
+    Body,
+    JsonDump,
+    Method,
+    Query,
+    RetortDump,
+    Url,
+)
 from .response import HttpResponse, ResponseTransformer
 from .response_transofrmers import (
     ErrorRaiser,
@@ -73,12 +80,17 @@ def get_default_response_transformers(
 
 
 def rest(
+    url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
     method: str,
 ) -> Callable[
     [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
+    if not isinstance(url, Url):
+        url = Url(url)
+    transformers = (url, *transformers)
+
     def inner(
         func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],
     ) -> MethodBinder[_MethodParamSpec, _MethodResultT]:
@@ -110,18 +122,20 @@ def rest(
 
 
 def get(
+    url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
 ) -> Callable[
     [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
-    return rest(*transformers, method="GET")
+    return rest(url, *transformers, method="GET")
 
 
 def post(
+    url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
 ) -> Callable[
     [Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT]],
     MethodBinder[_MethodParamSpec, _MethodResultT],
 ]:
-    return rest(*transformers, method="POST")
+    return rest(url, *transformers, method="POST")

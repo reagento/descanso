@@ -24,7 +24,7 @@ class MyResp:
 
 class MyClient:
     @get(
-        Url("repos/reagento/dishka/issues"),
+        "repos/reagento/dishka/issues",
         Query("per_page", "1"),
         Header("Accept", "application/vnd.github+json"),
     )
