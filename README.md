@@ -1,5 +1,3 @@
-from adaptix import Retort
-
 # Descanso
 
 [![PyPI version](https://badge.fury.io/py/dataclass-rest.svg)](https://badge.fury.io/py/dataclass-rest)
