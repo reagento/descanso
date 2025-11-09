@@ -1,7 +1,12 @@
 # Descanso
 
-[![PyPI version](https://badge.fury.io/py/dataclass-rest.svg)](https://badge.fury.io/py/dataclass-rest)
-[![Build Status](https://travis-ci.org/Tishka17/dataclass_rest.svg?branch=master)](https://travis-ci.org/Tishka17/dataclass_rest)
+[![PyPI version](https://badge.fury.io/py/descanso.svg)](https://pypi.python.org/pypi/descanso)
+[![Supported versions](https://img.shields.io/pypi/pyversions/descanso.svg)](https://pypi.python.org/pypi/descanso)
+[![Downloads](https://img.shields.io/pypi/dm/descanso.svg)](https://pypistats.org/packages/descanso)
+[![License](https://img.shields.io/github/license/reagento/descanso)](https://github.com/reagento/descanso/blob/master/LICENSE)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/reagento/descanso/setup.yml)](https://github.com/reagento/descanso/actions)
+[![Doc](https://readthedocs.org/projects/descanso/badge/?version=latest&style=flat)](https://descanso.readthedocs.io)
+[![Telegram](https://img.shields.io/badge/💬-Telegram-blue)](https://t.me/reagento_ru)
 
 A modern and simple way to create clients for REST like APIs
 

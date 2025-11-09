@@ -15,7 +15,8 @@ readme = "README.md"
 authors = [
     { name = "Andrey Tikhonov", email = "17@itishka.org" },
 ]
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 description = "An utility for writing simple clients for REST like APIs"
 requires-python = ">=3.11"
 classifiers = [
@@ -28,8 +29,9 @@ classifiers = [
 ]
 
 [project.urls]
-"Source" = "https://github.com/reagento/dataclass-rest"
-"Homepage" = "https://github.com/reagento/dataclass-rest"
-"Bug Tracker" = "https://github.com/reagento/dataclass-rest/issues"
+"Source" = "https://github.com/reagento/descanso"
+"Homepage" = "https://github.com/reagento/descanso"
+"Documentation" = "https://descanso.readthedocs.io/en/stable/"
+"Bug Tracker" = "https://github.com/reagento/descanso/issues"
 
 
