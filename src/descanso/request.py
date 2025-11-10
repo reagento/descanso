@@ -64,6 +64,7 @@ class RequestTransformer(Protocol):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: dict[str, Any],
+        fields: list[Field],
+        data: dict[str, Any],
     ) -> HttpRequest:
         return request

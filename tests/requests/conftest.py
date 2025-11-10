@@ -16,4 +16,3 @@ def mocker(session):
         case_sensitive=True,
     ) as session_mock:
         yield session_mock
-

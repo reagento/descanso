@@ -1,9 +1,18 @@
 from dataclasses import dataclass
+from typing import Any
 
+import pytest
 import requests
 import requests_mock
 
 from descanso import get, post
+from descanso.request import RequestTransformer
+from descanso.request_transformers import (
+    DeepObjectQuery,
+    DelimiterListQuery,
+    FormQuery,
+    PhpStyleQuery,
+)
 from tests.requests.stubs import StubRequestsClient
 
 
@@ -117,3 +126,93 @@ def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
     assert mocker.request_history[0].json() == {"x": 1, "y": "test"}
 
     assert client.get_x(id="x") == [0]
+
+
+@pytest.mark.parametrize(
+    ("transformer", "query"),
+    [
+        (DeepObjectQuery(), "ids[]=1&ids[]=2"),
+        (FormQuery(), "ids=1&ids=2"),
+        (DelimiterListQuery(), "ids=1,2"),
+        (DelimiterListQuery("|"), "ids=1|2"),
+    ],
+)
+def test_list_param(
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+    transformer: RequestTransformer,
+    query: str,
+):
+    class Api(StubRequestsClient):
+        @get("/", last_transformers=[transformer])
+        def get(self, ids: list[int]) -> Any:
+            raise NotImplementedError
+
+    mocker.get(
+        url=f"https://example.com/?{query}",
+        text="[0]",
+        complete_qs=True,
+    )
+    client = Api(session=session)
+    assert client.get(ids=[1, 2])
+
+
+@dataclass
+class Param:
+    a: int
+    b: int
+
+
+@pytest.mark.parametrize(
+    ("transformer", "query"),
+    [
+        (DeepObjectQuery(), "x[a]=1&x[b]=2"),
+        (FormQuery(), "a=1&b=2"),
+        (DelimiterListQuery(), "x=a,1,b,2"),
+        (DelimiterListQuery("|"), "x=a|1|b|2"),
+    ],
+)
+def test_obj_param(
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+    transformer: RequestTransformer,
+    query: str,
+):
+    class Api(StubRequestsClient):
+        @get("/", last_transformers=[transformer])
+        def get(self, x: Param) -> Any:
+            raise NotImplementedError
+
+    mocker.get(
+        url=f"https://example.com/?{query}",
+        text="[0]",
+        complete_qs=True,
+    )
+    client = Api(session=session)
+    assert client.get(x=Param(1, 2))
+
+
+@dataclass
+class MegaParam:
+    a: int
+    b: list[Param]
+
+
+def test_php_param(session: requests.Session, mocker: requests_mock.Mocker):
+    class Api(StubRequestsClient):
+        @get("/", last_transformers=[PhpStyleQuery()])
+        def get(self, x: MegaParam) -> Any:
+            raise NotImplementedError
+
+    mocker.get(
+        url="https://example.com/?x[a]=1&x[b][0][a]=2&x[b][0][b]=3&x[b][1][a]=4&x[b][1][b]=5",
+        text="[0]",
+        complete_qs=True,
+    )
+    client = Api(session=session)
+    assert client.get(
+        x=MegaParam(
+            a=1,
+            b=[Param(2, 3), Param(4, 5)],
+        ),
+    )

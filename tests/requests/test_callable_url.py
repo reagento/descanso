@@ -1,4 +1,3 @@
-
 import pytest
 import requests
 import requests_mock
@@ -67,12 +66,16 @@ def test_excess_param(session: requests.Session, mocker: requests_mock.Mocker):
     class Api(StubRequestsClient):
         @get(param_url)
         def get_entry(
-            self, entry_id: int, some_param: int | None = None,
+            self,
+            entry_id: int,
+            some_param: int | None = None,
         ) -> int:
             raise NotImplementedError
 
     mocker.get(
-        "https://example.com/get/1?some_param=2", text="1", complete_qs=True,
+        "https://example.com/get/1?some_param=2",
+        text="1",
+        complete_qs=True,
     )
 
     client = Api(session=session)

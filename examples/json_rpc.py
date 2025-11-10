@@ -8,7 +8,12 @@ from requests import Session
 
 from descanso.http.requests import RequestsClient
 from descanso.method_descriptor import MethodBinder
-from descanso.request import FieldDestintation, HttpRequest, RequestTransformer
+from descanso.request import (
+    Field,
+    FieldDestintation,
+    HttpRequest,
+    RequestTransformer,
+)
 from descanso.request_transformers import Body, JsonDump, Method, RetortDump
 from descanso.response import HttpResponse, ResponseTransformer
 from descanso.response_transofrmers import (
@@ -29,7 +34,8 @@ class PackJsonRPC(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: dict[str, Any],
+        fields: list[Field],
+        data: dict[str, Any],
     ) -> HttpRequest:
         request.body = {
             "jsonrpc": "2.0",

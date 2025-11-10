@@ -22,9 +22,9 @@ def make_request(
 ) -> HttpRequest:
     request = HttpRequest()
     for transformer in spec.request_transformers:
-        transformer.transform_request(request, args)
+        transformer.transform_request(request, spec.fields, args)
     for transformer in client.request_transformers:
-        transformer.transform_request(request, args)
+        transformer.transform_request(request, spec.fields, args)
     return request
 
 
@@ -99,9 +99,9 @@ class BoundAsyncMethod:
         args = getcallargs(self._spec.func, self._client, *args, **kwargs)
         request = make_request(self._client, self._spec, args)
         async with self._client.asend_request(request) as response:
-                return await make_response_async(
-                    self._client,
-                    self._spec,
-                    response,
-                    args,
-                )
+            return await make_response_async(
+                self._client,
+                self._spec,
+                response,
+                args,
+            )

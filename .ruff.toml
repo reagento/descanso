@@ -22,6 +22,7 @@ lint.ignore = [
     "SIM103",
     "ISC003",
     "PGH005", # false positive on requests_mock
+    "PERF401",  # incorrect perf suggestion
 
     # identical by code != identical by meaning
     "SIM114",

@@ -1,4 +1,4 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import (
     Any,
     Concatenate,
@@ -103,9 +103,24 @@ class Decorator(Protocol):
         raise NotImplementedError
 
 
+def api(*transformers: RequestTransformer) -> Decorator:
+    def inner(
+        func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],
+    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]:
+        spec = make_method_spec(
+            func,
+            transformers=transformers,
+            is_in_class=True,
+        )
+        return MethodBinder(spec)
+
+    return inner
+
+
 def rest(
     url: str | Callable | Url,
-    *transformers: RequestTransformer | ResponseTransformer,
+    transformers: Sequence[RequestTransformer | ResponseTransformer],
+    last_transformers: Sequence[RequestTransformer | ResponseTransformer],
     method: str,
 ) -> Decorator:
     if not isinstance(url, Url):
@@ -136,6 +151,14 @@ def rest(
                 is_json=True,
             ),
         )
+        for transformer in last_transformers:
+            if isinstance(transformer, RequestTransformer):
+                spec.request_transformers.append(transformer)
+            elif isinstance(transformer, ResponseTransformer):
+                spec.response_transformers.append(transformer)
+            else:
+                msg =  f"Unknown transformer type {type(transformer)}"
+                raise TypeError(msg)
 
         return MethodBinder(spec)
 
@@ -145,33 +168,63 @@ def rest(
 def get(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
+    last_transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
 ) -> Decorator:
-    return rest(url, *transformers, method="GET")
+    return rest(
+        url,
+        transformers=transformers,
+        method="GET",
+        last_transformers=last_transformers,
+    )
 
 
 def post(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
+    last_transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
 ) -> Decorator:
-    return rest(url, *transformers, method="POST")
+    return rest(
+        url,
+        transformers=transformers,
+        method="POST",
+        last_transformers=last_transformers,
+    )
 
 
 def put(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
+    last_transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
 ) -> Decorator:
-    return rest(url, *transformers, method="PUT")
+    return rest(
+        url,
+        transformers=transformers,
+        method="PUT",
+        last_transformers=last_transformers,
+    )
 
 
 def patch(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
+    last_transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
 ) -> Decorator:
-    return rest(url, *transformers, method="PATCH")
+    return rest(
+        url,
+        transformers=transformers,
+        method="PATCH",
+        last_transformers=last_transformers,
+    )
 
 
 def delete(
     url: str | Callable | Url,
     *transformers: RequestTransformer | ResponseTransformer,
+    last_transformers: Sequence[RequestTransformer | ResponseTransformer] = (),
 ) -> Decorator:
-    return rest(url, *transformers, method="DELETE")
+    return rest(
+        url,
+        transformers=transformers,
+        method="DELETE",
+        last_transformers=last_transformers,
+    )

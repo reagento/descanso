@@ -50,7 +50,7 @@ class RequestsClient(SyncClient):
         self,
         request: HttpRequest,
     ) -> Iterator[SyncResponseWrapper]:
-        params=[(k, v) for k, v in request.query_params if v is not None]
+        params = [(k, v) for k, v in request.query_params if v is not None]
         resp = self._session.request(
             method=request.method,
             url=urllib.parse.urljoin(self._base_url, request.url),
