@@ -5,7 +5,7 @@ Descanso supports different libraries to send HTTP requests. To switch between t
 
 For ``requests``
 
-.. code:: python
+.. code-block:: python
 
     from descanso.http.requests import RequestsClient
 
@@ -13,9 +13,10 @@ For ``requests``
         @get("/")
         def foo(): ...
 
+
 For ``aiohttp``:
 
-.. code:: python
+.. code-block:: python
 
     from descanso.http.aiohttp import AiohttpClient
 
