@@ -324,7 +324,7 @@ class Skip(RequestTransformer):
         return new_fields
 
 
-class DelimiterListQuery(RequestTransformer):
+class DelimiterQuery(RequestTransformer):
     def __init__(self, separator: str = ",") -> None:
         self.separator = separator
 
@@ -364,7 +364,7 @@ class DeepObjectQuery(RequestTransformer):
         data: dict[str, Any],
     ) -> HttpRequest:
         new_params = []
-        for  (name, value) in request.query_params:
+        for name, value in request.query_params:
             if isinstance(value, list):
                 for single_value in value:
                     new_params.append((f"{name}[]", single_value))
@@ -388,7 +388,7 @@ class PhpStyleQuery(RequestTransformer):
         data: dict[str, Any],
     ) -> HttpRequest:
         new_params = []
-        for (name, value) in request.query_params:
+        for name, value in request.query_params:
             new_params.extend(self._dump(name, value))
         request.query_params = new_params
         return request

@@ -6,6 +6,7 @@ from requests import Session
 from descanso import delete, get, post
 from descanso.client import Dumper, Loader
 from descanso.http.requests import RequestsClient
+from descanso.rest_builder import RestBuilder
 
 
 class PydanticAdapter(Loader, Dumper):
@@ -32,6 +33,13 @@ class Todo(BaseModel):
         populate_by_name=True,
     )
 
+adapter = PydanticAdapter()
+rest = RestBuilder(
+    request_body_dumper=adapter,
+    response_body_loader=adapter,
+    query_param_dumper=adapter,
+)
+
 
 class RealClient(RequestsClient):
     def __init__(self):
@@ -39,28 +47,25 @@ class RealClient(RequestsClient):
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
             session=Session(),
-            request_body_dumper=adapter,
-            request_params_dumper=adapter,
-            response_body_loader=adapter,
         )
 
-    @get("todos/{id}")
+    @rest.get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
         """GET method with path param"""
 
-    @get("todos")
+    @rest.get("todos")
     def list_todos(self, user_id: int | None) -> list[Todo]:
         """GET method with query params"""
 
-    @delete("todos/{id}")
+    @rest.delete("todos/{id}")
     def delete_todo(self, id: int):
         """DELETE method"""
 
-    @post("todos")
+    @rest.post("todos")
     def create_todo(self, body: Todo) -> Todo:
         """POST method"""
 
-    @get("https://httpbin.org/get")
+    @rest.get("https://httpbin.org/get")
     def get_httpbin(self):
         """Url different from base_url"""
 

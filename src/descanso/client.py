@@ -20,9 +20,6 @@ class BaseClient:
     def __init__(
         self,
         transformers: Sequence[RequestTransformer | ResponseTransformer],
-        request_body_dumper: Dumper,
-        request_params_dumper: Dumper,
-        response_body_loader: Loader,
     ):
         self.request_transformers = [
             r for r in transformers if isinstance(r, RequestTransformer)
@@ -30,9 +27,6 @@ class BaseClient:
         self.response_transformers = [
             r for r in transformers if isinstance(r, ResponseTransformer)
         ]
-        self.request_body_dumper = request_body_dumper
-        self.response_body_loader = response_body_loader
-        self.request_params_dumper = request_params_dumper
 
 
 class SyncResponseWrapper(HttpResponse):

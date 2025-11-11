@@ -9,7 +9,7 @@ from descanso import get, post
 from descanso.request import RequestTransformer
 from descanso.request_transformers import (
     DeepObjectQuery,
-    DelimiterListQuery,
+    DelimiterQuery,
     FormQuery,
     PhpStyleQuery,
 )
@@ -133,8 +133,8 @@ def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
     [
         (DeepObjectQuery(), "ids[]=1&ids[]=2"),
         (FormQuery(), "ids=1&ids=2"),
-        (DelimiterListQuery(), "ids=1,2"),
-        (DelimiterListQuery("|"), "ids=1|2"),
+        (DelimiterQuery(), "ids=1,2"),
+        (DelimiterQuery("|"), "ids=1|2"),
     ],
 )
 def test_list_param(
@@ -168,8 +168,8 @@ class Param:
     [
         (DeepObjectQuery(), "x[a]=1&x[b]=2"),
         (FormQuery(), "a=1&b=2"),
-        (DelimiterListQuery(), "x=a,1,b,2"),
-        (DelimiterListQuery("|"), "x=a|1|b|2"),
+        (DelimiterQuery(), "x=a,1,b,2"),
+        (DelimiterQuery("|"), "x=a|1|b|2"),
     ],
 )
 def test_obj_param(

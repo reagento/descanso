@@ -1,12 +1,8 @@
 __all__ = [
     "Dumper",
     "Loader",
-    "delete",
-    "get",
-    "patch",
-    "post",
-    "put",
+    "RestBuilder",
 ]
 
 from .client import Dumper, Loader
-from .rest import delete, get, patch, post, put
+from .rest_builder import RestBuilder

@@ -6,9 +6,9 @@ from typing import Any
 from adaptix import NameStyle, Retort, name_mapping
 from requests import Session
 
-from descanso import delete, get, post
 from descanso.http.requests import RequestsClient
 from descanso.request_transformers import File
+from descanso.rest_builder import RestBuilder
 
 
 @dataclass
@@ -19,40 +19,46 @@ class Todo:
     completed: bool
 
 
+retort = Retort(
+    recipe=[
+        name_mapping(name_style=NameStyle.CAMEL),
+    ]
+)
+rest = RestBuilder(
+    request_body_dumper=retort,
+    response_body_loader=retort,
+    query_param_dumper=Retort(),
+)
+
+
 class RealClient(RequestsClient):
     def __init__(self):
-        retort = Retort(recipe=[
-            name_mapping(name_style=NameStyle.CAMEL),
-        ])
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
             session=Session(),
-            request_body_dumper=retort,
-            request_params_dumper=Retort(),
-            response_body_loader=retort,
         )
 
-    @get("todos/{id}")
+    @rest.get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
         """GET method with path param"""
 
-    @get("todos")
+    @rest.get("todos")
     def list_todos(self, user_id: int | None) -> list[Todo]:
         """GET method with query params"""
 
-    @delete("todos/{id}")
+    @rest.delete("todos/{id}")
     def delete_todo(self, id: int):
         """DELETE method"""
 
-    @post("todos")
+    @rest.post("todos")
     async def create_todo(self, body: Todo) -> Todo:
         """POST method"""
 
-    @get("https://httpbin.org/get")
+    @rest.get("https://httpbin.org/get")
     def get_httpbin(self) -> Any:
         """Url different from base_url"""
 
-    @post(
+    @rest.post(
         "https://httpbin.org/post",
         File("file"),
     )
