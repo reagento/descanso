@@ -1,7 +1,7 @@
 Authorization
 ===========================
 
-There are 2 approaches to have authorization:
+There are a few approaches to have authorization:
 
 **Static auth data**. Just add transformer corresponding to your logic.
 You can reference ``self`` object to get data.
@@ -30,6 +30,6 @@ Note, that we are not using f-strings here, format string will be evaluated late
             request: HttpRequest,
         ) -> AbstractContextManager[SyncResponseWrapper]:
             token = get_token()  # custom logic here
-            request.headers.append("Authorization", f"Bearer {token}")
+            request.headers.append(("Authorization", f"Bearer {token}"))
             super().send_request(request)
 

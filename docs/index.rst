@@ -8,6 +8,8 @@ A modern and simple way to create clients for REST like APIs
    :hidden:
    :caption: Contents:
 
+   quickstart
+   configuration
    auth
    transports
 
