@@ -13,15 +13,16 @@ from typing import (
 from descanso import Dumper, Loader
 from descanso.method_descriptor import MethodBinder
 from descanso.method_spec import MethodSpec
-from descanso.request import FieldDestintation, RequestTransformer
+from descanso.request import FieldDestintation, FieldOut, RequestTransformer
 from descanso.request_transformers import (
     Body,
     BodyModelDump,
+    FormQuery,
     JsonDump,
     Method,
     Query,
     QueryModelDump,
-    Url, FormQuery,
+    Url,
 )
 from descanso.response import HttpResponse, ResponseTransformer
 from descanso.response_transofrmers import (
@@ -174,34 +175,23 @@ class RestBuilder(Decorator):
         spec.request_transformers.append(transformer)
         spec.fields_out.extend(transformer.transform_fields(spec.fields_in))
 
-    def _add_default_request_transformers(self, spec: MethodSpec):
+    def _get_body_field(self, spec: MethodSpec) -> FieldOut | None:
+        for field in spec.fields_out:
+            if field.dest is FieldDestintation.BODY:
+                return field
+        return None
+
+    def _add_default_request_body_transformers(self, spec: MethodSpec):
         default_body_name = self.params.get("body_name", DEFAULT_BODY_PARAM)
 
-        body_out = next(
-            (
-                field
-                for field in spec.fields_out
-                if field.dest is FieldDestintation.BODY
-            ),
-            None,
-        )
+        body_out = self._get_body_field(spec)
         for field in spec.fields_in:
             if field.consumed_by:
                 continue
             if not body_out and field.name == default_body_name:
                 self._add_request_transformer(spec, Body(field.name))
-            else:
-                self._add_request_transformer(spec, Query(field.name))
-        body_out = next(
-            (
-                field
-                for field in spec.fields_out
-                if field.dest is FieldDestintation.BODY
-            ),
-            None,
-        )
 
-        if body_out:
+        if self._get_body_field(spec):
             dumper = self.params.get("request_body_dumper")
             if dumper:
                 self._add_request_transformer(spec, BodyModelDump(dumper))
@@ -212,9 +202,15 @@ class RestBuilder(Decorator):
             elif post_dump:
                 self._add_request_transformer(spec, post_dump)
 
+    def _add_default_query_transformers(self, spec: MethodSpec):
+        for field in spec.fields_in:
+            if field.consumed_by:
+                continue
+            self._add_request_transformer(spec, Query(field.name))
+
         if dumper := self.params.get("query_param_dumper"):
             self._add_request_transformer(spec, QueryModelDump(dumper))
-        query_post_dump= self.params.get("query_param_post_dump", ...)
+        query_post_dump = self.params.get("query_param_post_dump", ...)
         if query_post_dump is ...:
             self._add_request_transformer(spec, FormQuery())
         elif query_post_dump:
@@ -255,6 +251,7 @@ class RestBuilder(Decorator):
             transformers=self.transformers,
             is_in_class=True,
         )
-        self._add_default_request_transformers(spec)
+        self._add_default_request_body_transformers(spec)
+        self._add_default_query_transformers(spec)
         self._add_default_response_transformers(spec)
         return MethodBinder(spec)
