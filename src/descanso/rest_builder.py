@@ -16,18 +16,19 @@ from descanso.method_spec import MethodSpec
 from descanso.request import FieldDestintation, RequestTransformer
 from descanso.request_transformers import (
     Body,
+    BodyModelDump,
     JsonDump,
     Method,
     Query,
-    RetortDump,
-    Url,
+    QueryModelDump,
+    Url, FormQuery,
 )
 from descanso.response import HttpResponse, ResponseTransformer
 from descanso.response_transofrmers import (
+    BodyModelLoad,
     ErrorRaiser,
     JsonLoad,
     KeepResponse,
-    RetortLoad,
 )
 from descanso.signature import make_method_spec
 
@@ -165,76 +166,85 @@ class RestBuilder(Decorator):
             **params,
         )
 
-    def _default_request_transformers(
+    def _add_request_transformer(
         self,
         spec: MethodSpec,
-    ) -> list[RequestTransformer]:
-        transformers = []
+        transformer: RequestTransformer,
+    ):
+        spec.request_transformers.append(transformer)
+        spec.fields_out.extend(transformer.transform_fields(spec.fields_in))
+
+    def _add_default_request_transformers(self, spec: MethodSpec):
         default_body_name = self.params.get("body_name", DEFAULT_BODY_PARAM)
-        body_name = next(
-            (field.name is FieldDestintation.BODY for field in spec.fields),
+
+        body_out = next(
+            (
+                field
+                for field in spec.fields_out
+                if field.dest is FieldDestintation.BODY
+            ),
+            None,
+        )
+        for field in spec.fields_in:
+            if field.consumed_by:
+                continue
+            if not body_out and field.name == default_body_name:
+                self._add_request_transformer(spec, Body(field.name))
+            else:
+                self._add_request_transformer(spec, Query(field.name))
+        body_out = next(
+            (
+                field
+                for field in spec.fields_out
+                if field.dest is FieldDestintation.BODY
+            ),
             None,
         )
 
-        for field in spec.fields:
-            if field.dest is not FieldDestintation.UNDEFINED:
-                continue
-            if not body_name and field.name == default_body_name:
-                transformers.append(Body(field.name))
-                body_name = default_body_name
-            else:
-                transformers.append(Query(field.name))
-        if body_name:
-            hint = next(
-                (
-                    field.type_hint
-                    for field in spec.fields
-                    if field.name == body_name
-                ),
-                Any,
-            )
-
+        if body_out:
             dumper = self.params.get("request_body_dumper")
-            if hint is not Any and dumper:
-                transformers.append(RetortDump(hint, dumper))
+            if dumper:
+                self._add_request_transformer(spec, BodyModelDump(dumper))
 
             post_dump = self.params.get("request_body_post_dump", ...)
             if post_dump is ...:
-                transformers.append(JsonDump())
+                self._add_request_transformer(spec, JsonDump())
             elif post_dump:
-                transformers.append(post_dump)
+                self._add_request_transformer(spec, post_dump)
 
+        if dumper := self.params.get("query_param_dumper"):
+            self._add_request_transformer(spec, QueryModelDump(dumper))
+        query_post_dump= self.params.get("query_param_post_dump", ...)
+        if query_post_dump is ...:
+            self._add_request_transformer(spec, FormQuery())
+        elif query_post_dump:
+            self._add_request_transformer(spec, query_post_dump)
         return []
 
-    def _default_response_transformers(
-        self,
-        spec: MethodSpec,
-    ) -> list[ResponseTransformer]:
-        transformers = []
+    def _add_default_response_transformers(self, spec: MethodSpec) -> None:
         error_raiser = self.params.get("error_raiser", ...)
         if error_raiser is ...:
-            transformers.append(ErrorRaiser())
+            spec.response_transformers.append(ErrorRaiser())
         elif error_raiser:
-            transformers.append(error_raiser)
+            spec.response_transformers.append(error_raiser)
 
         pre_loader = self.params.get("response_body_pre_load", ...)
         if pre_loader is ...:
-            transformers.append(JsonLoad())
+            spec.response_transformers.append(JsonLoad())
         elif pre_loader:
-            transformers.append(pre_loader)
+            spec.response_transformers.append(pre_loader)
 
         loader = self.params.get("response_body_loader")
         if spec.result_type is HttpResponse:
-            transformers.append(KeepResponse(need_body=False))
+            spec.response_transformers.append(KeepResponse(need_body=False))
         elif (
             loader
             and spec.result_type is not Any
             and spec.result_type is not object
         ):
-            transformers.append(
-                RetortLoad(spec.result_type, loader=loader),
+            spec.response_transformers.append(
+                BodyModelLoad(spec.result_type, loader=loader),
             )
-        return transformers
 
     def __call__(
         self,
@@ -245,12 +255,6 @@ class RestBuilder(Decorator):
             transformers=self.transformers,
             is_in_class=True,
         )
-        for transformer in spec.request_transformers:
-            spec.fields = transformer.transform_fields(fields=spec.fields)
-        spec.request_transformers.extend(
-            self._default_request_transformers(spec),
-        )
-        spec.response_transformers.extend(
-            self._default_response_transformers(spec),
-        )
+        self._add_default_request_transformers(spec)
+        self._add_default_response_transformers(spec)
         return MethodBinder(spec)

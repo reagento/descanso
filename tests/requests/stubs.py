@@ -22,7 +22,4 @@ class StubRequestsClient(RequestsClient):
         super().__init__(
             base_url="https://example.com",
             session=session,
-            request_body_dumper=StubConverter(),
-            response_body_loader=StubConverter(),
-            request_params_dumper=StubConverter(),
         )

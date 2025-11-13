@@ -3,8 +3,9 @@ from enum import Enum
 
 import requests_mock
 from adaptix import NameStyle, Retort, dumper, name_mapping
+from requests import Session
 
-from descanso import patch
+from descanso import RestBuilder
 from descanso.http.requests import RequestsClient
 
 
@@ -25,31 +26,37 @@ class ResponseBody:
     selection: Selection
 
 
-class Api(RequestsClient):
-    def __init__(self, session):
-        super().__init__(
-            base_url="https://example.com/",
-            session=session,
-            request_body_dumper=Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.CAMEL),
-                ],
-            ),
-            request_params_dumper=Retort(
-                recipe=[
-                    dumper(str, lambda x: f"1{x}"),
-                ],
-            ),
-            response_body_loader=Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.LOWER_KEBAB),
-                ],
-            ),
-        )
+def api(session: Session):
+    rest = RestBuilder(
+        request_body_dumper=Retort(
+            recipe=[
+                name_mapping(name_style=NameStyle.CAMEL),
+            ],
+        ),
+        query_param_dumper=Retort(
+            recipe=[
+                dumper(str, lambda x: f"1{x}"),
+            ],
+        ),
+        response_body_loader=Retort(
+            recipe=[
+                name_mapping(name_style=NameStyle.LOWER_KEBAB),
+            ],
+        ),
+    )
 
-    @patch("/post/")
-    def post_x(self, long_param: str, body: RequestBody) -> ResponseBody:
-        raise NotImplementedError
+    class Api(RequestsClient):
+        def __init__(self, session):
+            super().__init__(
+                base_url="https://example.com/",
+                session=session,
+            )
+
+        @rest.patch("/post/")
+        def post_x(self, long_param: str, body: RequestBody) -> ResponseBody:
+            raise NotImplementedError
+
+    return Api(session)
 
 
 def test_body(session, mocker: requests_mock.Mocker):
@@ -58,7 +65,7 @@ def test_body(session, mocker: requests_mock.Mocker):
         text="""{"int-param": 1, "selection": "TWO"}""",
         complete_qs=True,
     )
-    client = Api(session)
+    client = api(session)
     result = client.post_x(
         long_param="hello",
         body=RequestBody(int_param=42, selection=Selection.ONE),

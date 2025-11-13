@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
@@ -43,28 +44,32 @@ class FieldDestintation(Enum):
 
 
 @dataclass
-class Field:
+class FieldIn:
     name: str
     type_hint: Any
-    dest: FieldDestintation
+    consumed_by: list["RequestTransformer"]
 
-    def replace_dest(self, dest: FieldDestintation) -> "Field":
-        return Field(
-            name=self.name,
-            type_hint=self.type_hint,
-            dest=dest,
-        )
+
+@dataclass
+class FieldOut:
+    name: str | None
+    dest: FieldDestintation
+    type_hint: Any
 
 
 @runtime_checkable
 class RequestTransformer(Protocol):
-    def transform_fields(self, fields: list[Field]) -> list[Field]:
-        return fields
+    def transform_fields(
+        self,
+        fields_in: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
+        return []
 
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         return request

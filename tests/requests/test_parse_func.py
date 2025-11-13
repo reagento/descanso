@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import requests
 import requests_mock
 
-from descanso import get, post
+from descanso import RestBuilder
 from .stubs import StubRequestsClient
 
 
@@ -12,13 +12,17 @@ class ExampleBody:
     value: int
 
 
-def test_string_hints(session: requests.Session, mocker: requests_mock.Mocker):
+def test_string_hints(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @get("/items/{item_id}")
+        @rest.get("/items/{item_id}")
         def get_item(self, item_id: "str") -> "list[int]":
             raise NotImplementedError
 
-        @post("/items")
+        @rest.post("/items")
         def create_item(self, body: ExampleBody) -> "int | None":
             raise NotImplementedError
 

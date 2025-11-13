@@ -7,12 +7,12 @@ from .exceptions import ClientError, ServerError
 from .response import HttpResponse, ResponseTransformer
 
 
-class RetortLoad(ResponseTransformer):
+class BodyModelLoad(ResponseTransformer):
     def __init__(
         self,
         type_hint: Any,
+        loader: Loader | None,
         codes: Sequence[int] = (200,),
-        loader: Loader | None = None,
     ) -> None:
         self.type_hint = type_hint
         self.codes = codes
@@ -28,14 +28,17 @@ class RetortLoad(ResponseTransformer):
     ) -> HttpResponse:
         if response.status_code not in self.codes:
             return response
-        loader = self.loader or fields["self"].response_body_loader
-        response.body = loader.load(response.body, self.type_hint)
+        response.body = self.loader.load(response.body, self.type_hint)
         return response
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}"
-            f"({self.type_hint!r}, codes={self.codes!r})"
+            f"("
+            f"{self.type_hint!r}, "
+            f"codes={self.codes!r}, "
+            f"loader={self.loader!r}"
+            f")"
         )
 
 

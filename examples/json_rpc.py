@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
 from uuid import uuid4
 
 from adaptix import NameStyle, Retort, name_mapping
@@ -8,19 +8,19 @@ from requests import Session
 
 from descanso.http.requests import RequestsClient
 from descanso.method_descriptor import MethodBinder
+from descanso.method_spec import MethodSpec
 from descanso.request import (
-    Field,
     FieldDestintation,
     HttpRequest,
-    RequestTransformer,
+    RequestTransformer, FieldIn, FieldOut,
 )
-from descanso.request_transformers import Body, JsonDump, Method, RetortDump
+from descanso.request_transformers import Body, JsonDump, Method, BodyModelDump
 from descanso.response import HttpResponse, ResponseTransformer
 from descanso.response_transofrmers import (
     ErrorRaiser,
     JsonLoad,
     KeepResponse,
-    RetortLoad,
+    BodyModelLoad,
 )
 from descanso.signature import make_method_spec
 
@@ -34,7 +34,8 @@ class PackJsonRPC(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request.body = {
@@ -73,6 +74,22 @@ class JsonRPCError(ResponseTransformer):
         return response
 
 
+retort = Retort(
+    strict_coercion=False,
+    recipe=[
+        name_mapping(name_style=NameStyle.CAMEL),
+    ],
+)
+
+
+def _add_request_transformer(
+        spec: MethodSpec,
+        transformer: RequestTransformer,
+):
+    spec.request_transformers.append(transformer)
+    spec.fields_out.extend(transformer.transform_fields(spec.fields_in))
+
+
 def jsonrpc(
     method: str,
     *transformers: RequestTransformer | ResponseTransformer,
@@ -83,21 +100,14 @@ def jsonrpc(
             transformers=transformers,
             is_in_class=True,
         )
-        body_name = next(
-            (field.name is FieldDestintation.BODY for field in spec.fields),
+        body_out = next(
+            (field for field in spec.fields_out if field.dest is FieldDestintation.BODY),
             None,
         )
-
-        for field in spec.fields:
-            if field.dest is not FieldDestintation.UNDEFINED:
-                continue
-            if not body_name and field.name == DEFAULT_BODY_PARAM:
-                spec.request_transformers.append(Body(field.name))
-        hint = next(
-            (field.type_hint for field in spec.fields if field.name == body_name),
-            Any,
-        )
-        spec.request_transformers.append(RetortDump(hint))
+        for field in spec.fields_in:
+            if not body_out and field.name == DEFAULT_BODY_PARAM:
+                _add_request_transformer(spec, Body(field.name))
+        spec.request_transformers.append(BodyModelDump(retort))
         spec.request_transformers.append(PackJsonRPC(method))
         spec.request_transformers.append(Method("POST"))
         spec.request_transformers.append(JsonDump())
@@ -109,7 +119,7 @@ def jsonrpc(
         if spec.result_type is HttpResponse:
             spec.response_transformers.append(KeepResponse(need_body=False))
         elif spec.result_type is not Any and spec.result_type is not object:
-            spec.response_transformers.append(RetortLoad(spec.result_type))
+            spec.response_transformers.append(BodyModelLoad(spec.result_type, loader=retort))
         return MethodBinder(spec)
 
     return decorator
@@ -127,18 +137,9 @@ class Transaction:
 
 class MyClient(RequestsClient):
     def __init__(self):
-        retort = Retort(
-            strict_coercion=False,
-            recipe=[
-                name_mapping(name_style=NameStyle.CAMEL),
-            ],
-        )
         super().__init__(
             base_url="https://eth.merkle.io/",
             session=Session(),
-            request_body_dumper=retort,
-            request_params_dumper=Retort(),
-            response_body_loader=retort,
         )
 
 

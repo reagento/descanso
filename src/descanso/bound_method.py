@@ -22,9 +22,19 @@ def make_request(
 ) -> HttpRequest:
     request = HttpRequest()
     for transformer in spec.request_transformers:
-        transformer.transform_request(request, spec.fields, args)
+        transformer.transform_request(
+            request,
+            spec.fields_in,
+            spec.fields_out,
+            args,
+        )
     for transformer in client.request_transformers:
-        transformer.transform_request(request, spec.fields, args)
+        transformer.transform_request(
+            request,
+            spec.fields_in,
+            spec.fields_out,
+            args,
+        )
     return request
 
 
@@ -79,6 +89,8 @@ def need_response_body(
 
 
 class BoundSyncMethod:
+    __slots__ = ("_client", "_spec")
+
     def __init__(self, spec: MethodSpec, client: SyncClient) -> None:
         self._spec = spec
         self._client = client
@@ -91,6 +103,8 @@ class BoundSyncMethod:
 
 
 class BoundAsyncMethod:
+    __slots__ = ("_client", "_spec")
+
     def __init__(self, spec: MethodSpec, client: AsyncClient) -> None:
         self._spec = spec
         self._client = client

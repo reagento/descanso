@@ -1,14 +1,15 @@
 import itertools
 import json
 import string
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from inspect import getfullargspec
 from typing import Any, get_type_hints
 
 from .client import Dumper
 from .request import (
-    Field,
     FieldDestintation,
+    FieldIn,
+    FieldOut,
     FileData,
     HttpRequest,
     KeyValue,
@@ -40,52 +41,64 @@ DataTemplate = Callable[[dict[str, Any]], Any] | str | None
 class DestTransformer(RequestTransformer):
     def __init__(
         self,
-        request_key: str,
+        name_out: str,
         template: DataTemplate,
         dest: FieldDestintation,
     ) -> None:
-        self._original_template = template
-        self._field_type = Any
+        self.name_out = name_out
+        self.dest = dest
+        self.original_template = template
+        self.type_hint = Any
         if template is None:
-            self.template = lambda **kwargs: kwargs[request_key]
-            self.args = [request_key]
+            self.template = lambda **kwargs: kwargs[name_out]
+            self.args = [name_out]
+            self.type_hint = Any
         elif isinstance(template, str):
             self.template = template.format
             self.args = get_params_from_string(template)
+            self.type_hint = str
         else:
             self.template = template
             self.args = get_params_from_callable(template)
-            self._field_type = get_type_hints(template).get("return", Any)
-        self.request_key = request_key
-        self.dest = dest
+            self.type_hint = get_type_hints(template).get("return", Any)
 
-    def transform_fields(self, fields: list[Field]) -> list[Field]:
-        new_fields = []
+    def transform_fields(
+        self,
+        fields: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
+        type_hint = self.type_hint
         for field in fields:
             if field.name in self.args:
-                new_fields.append(field.replace_dest(self.dest))
-            else:
-                new_fields.append(field)
-        return new_fields
+                field.consumed_by.append(self)
+                if self.original_template is None:
+                    type_hint = field.type_hint
+        return [
+            FieldOut(
+                name=self.name_out,
+                dest=self.dest,
+                type_hint=type_hint,
+            ),
+        ]
 
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request_field = getattr(request, self.dest.value)
         data = self.template(
             **{k: v for k, v in data.items() if k in self.args},
         )
-        request_field.append((self.request_key, data))
+        request_field.append((self.name_out, data))
         return request
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}("
-            f"{self.request_key!r}, "
-            f"{self._original_template!r}, "
+            f"{self.name_out!r}, "
+            f"{self.original_template!r}, "
             f"{self.dest!r}"
             f")"
         )
@@ -94,7 +107,7 @@ class DestTransformer(RequestTransformer):
 class Header(DestTransformer):
     def __init__(self, header: str, template: DataTemplate = None):
         super().__init__(
-            request_key=header,
+            name_out=header,
             template=template,
             dest=FieldDestintation.HEADER,
         )
@@ -103,50 +116,28 @@ class Header(DestTransformer):
 class Extra(DestTransformer):
     def __init__(self, header: str, template: DataTemplate = None):
         super().__init__(
-            request_key=header,
+            name_out=header,
             template=template,
             dest=FieldDestintation.EXTRA,
         )
 
 
 class Query(DestTransformer):
-    def __init__(self, header: str, template: DataTemplate = None):
+    def __init__(self, name_out: str, template: DataTemplate = None):
         super().__init__(
-            request_key=header,
+            name_out=name_out,
             template=template,
             dest=FieldDestintation.QUERY,
         )
 
-    def transform_request(
-        self,
-        request: HttpRequest,
-        fields: list[Field],
-        data: dict[str, Any],
-    ) -> HttpRequest:
-        if self.request_key in data:
-            if self._original_template is None:
-                data = data.copy()
-                hint = next(
-                    f.type_hint for f in fields if f.name == self.request_key
-                )
-                dumper: Dumper = data["self"].request_params_dumper
-                data[self.request_key] = dumper.dump(
-                    data[self.request_key],
-                    hint,
-                )
-            elif self._field_type is not Any:
-                data = data.copy()
-                dumper: Dumper = data["self"].request_params_dumper
-                data[self.request_key] = dumper.dump(
-                    data[self.request_key],
-                    self._field_type,
-                )
-
-        return super().transform_request(request, fields, data)
-
 
 class Url(RequestTransformer):
     def __init__(self, template: Callable | str):
+        self._field_out = FieldOut(
+            name=None,
+            dest=FieldDestintation.URL,
+            type_hint=str,
+        )
         self._original_template = template
         if isinstance(template, str):
             self.template = template.format
@@ -155,19 +146,20 @@ class Url(RequestTransformer):
             self.template = template
             self.args = get_params_from_callable(template)
 
-    def transform_fields(self, fields: list[Field]) -> list[Field]:
-        new_fields = []
+    def transform_fields(
+        self,
+        fields: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
         for field in fields:
             if field.name in self.args:
-                new_fields.append(field.replace_dest(FieldDestintation.URL))
-            else:
-                new_fields.append(field)
-        return new_fields
+                field.consumed_by.append(self)
+        return [self._field_out]
 
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request.url = self.template(
@@ -191,20 +183,26 @@ class File(RequestTransformer):
         self.filefield = filefield or arg
         self.filename = filename
         self.content_type = content_type
+        self.field_out = FieldOut(
+            name=self.filefield,
+            dest=FieldDestintation.FILE,
+            type_hint=Any,
+        )
 
-    def transform_fields(self, fields: list[Field]) -> list[Field]:
-        new_fields = []
+    def transform_fields(
+        self,
+        fields: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
         for field in fields:
             if field.name == self.arg:
-                new_fields.append(field.replace_dest(FieldDestintation.FILE))
-            else:
-                new_fields.append(field)
-        return new_fields
+                field.consumed_by.append(self)
+        return [self.field_out]
 
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request.files.append(
@@ -234,19 +232,27 @@ class Body(RequestTransformer):
     def __init__(self, arg: str):
         self.arg = arg
 
-    def transform_fields(self, fields: list[Field]) -> list[Field]:
-        new_fields = []
+    def transform_fields(
+        self,
+        fields: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
         for field in fields:
             if field.name == self.arg:
-                new_fields.append(field.replace_dest(FieldDestintation.BODY))
-            else:
-                new_fields.append(field)
-        return new_fields
+                field.consumed_by.append(self)
+                return [
+                    FieldOut(
+                        name=None,
+                        dest=FieldDestintation.BODY,
+                        type_hint=field.type_hint,
+                    ),
+                ]
+        return []
 
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request.body = data[self.arg]
@@ -256,30 +262,64 @@ class Body(RequestTransformer):
         return f"{self.__class__.__name__}({self.arg!r})"
 
 
-class RetortDump(RequestTransformer):
-    def __init__(self, type_hint: Any, dumper: Dumper | None = None) -> None:
-        self.type_hint = type_hint
+class BodyModelDump(RequestTransformer):
+    def __init__(self, dumper: Dumper) -> None:
         self.dumper = dumper
 
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
-        dumper = self.dumper or data["self"].request_body_dumper
-        request.body = dumper.dump(request.body, self.type_hint)
+        type_hint = next(
+            (
+                f.type_hint
+                for f in fields_out
+                if f.dest == FieldDestintation.BODY
+            ),
+            Any,
+        )
+        request.body = self.dumper.dump(request.body, type_hint)
         return request
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.type_hint!r})"
+        return f"{self.__class__.__name__}({self.dumper!r})"
+
+
+class QueryModelDump(RequestTransformer):
+    def __init__(self, dumper: Dumper) -> None:
+        self.dumper = dumper
+
+    def transform_request(
+        self,
+        request: HttpRequest,
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
+        data: dict[str, Any],
+    ) -> HttpRequest:
+        types = {
+            f.name: f.type_hint
+            for f in fields_out
+            if f.dest == FieldDestintation.QUERY
+        }
+        request.query_params = [
+            (name, self.dumper.dump(value, types.get(name, Any)))
+            for name, value in request.query_params
+        ]
+        return request
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.dumper!r})"
 
 
 class JsonDump(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request.body = json.dumps(request.body)
@@ -297,7 +337,8 @@ class Method(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         request.method = self.method
@@ -314,14 +355,14 @@ class Skip(RequestTransformer):
     ):
         self.arg = arg
 
-    def transform_fields(self, fields: list[Field]) -> list[Field]:
-        new_fields = []
+    def transform_fields(
+        self,
+        fields: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
         for field in fields:
             if field.name == self.arg:
-                new_fields.append(field.replace_dest(FieldDestintation.EXTRA))
-            else:
-                new_fields.append(field)
-        return new_fields
+                field.consumed_by.append(self)
+        return []
 
 
 class DelimiterQuery(RequestTransformer):
@@ -331,7 +372,8 @@ class DelimiterQuery(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         for i, (name, value) in enumerate(request.query_params):
@@ -360,7 +402,8 @@ class DeepObjectQuery(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         new_params = []
@@ -384,7 +427,8 @@ class PhpStyleQuery(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         new_params = []
@@ -411,7 +455,8 @@ class FormQuery(RequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
-        fields: list[Field],
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
         new_params = []

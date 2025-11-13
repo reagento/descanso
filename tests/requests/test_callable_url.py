@@ -2,7 +2,7 @@ import pytest
 import requests
 import requests_mock
 
-from descanso import get
+from descanso import RestBuilder
 from .stubs import StubRequestsClient
 
 
@@ -20,9 +20,13 @@ def kwonly_param_url(entry_id: int | None = None) -> str:
     return "/get/random"
 
 
-def test_simple(session: requests.Session, mocker: requests_mock.Mocker):
+def test_simple(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @get(static_url)
+        @rest.get(static_url)
         def get_x(self) -> list[int]:
             raise NotImplementedError
 
@@ -45,13 +49,14 @@ def test_simple(session: requests.Session, mocker: requests_mock.Mocker):
     ],
 )
 def test_with_param(
+    rest: RestBuilder,
     session: requests.Session,
     mocker: requests_mock.Mocker,
     value: int,
     expected: int,
 ):
     class Api(StubRequestsClient):
-        @get(param_url)
+        @rest.get(param_url)
         def get_entry(self, entry_id: int) -> int:
             raise NotImplementedError
 
@@ -62,9 +67,13 @@ def test_with_param(
     assert client.get_entry(value) == expected
 
 
-def test_excess_param(session: requests.Session, mocker: requests_mock.Mocker):
+def test_excess_param(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @get(param_url)
+        @rest.get(param_url)
         def get_entry(
             self,
             entry_id: int,
@@ -82,9 +91,13 @@ def test_excess_param(session: requests.Session, mocker: requests_mock.Mocker):
     assert client.get_entry(1, 2) == 1
 
 
-def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
+def test_kwonly_param(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @get(kwonly_param_url)
+        @rest.get(kwonly_param_url)
         def get_entry(self, *, entry_id: int | None = None) -> int:
             raise NotImplementedError
 

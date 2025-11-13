@@ -5,7 +5,7 @@ import pytest
 from aiohttp import ClientSession
 from requests import Session
 
-from descanso import Dumper, Loader, get
+from descanso import Dumper, Loader, RestBuilder
 from descanso.http.aiohttp import AiohttpClient
 from descanso.http.requests import RequestsClient
 
@@ -24,17 +24,16 @@ class StubConverter(Loader, Dumper):
 
 
 def test_sync():
+    rest = RestBuilder()
+
     class RealClient(RequestsClient):
         def __init__(self):
             super().__init__(
                 "https://jsonplaceholder.typicode.com/",
                 Session(),
-                request_body_dumper=StubConverter(),
-                request_params_dumper=StubConverter(),
-                response_body_loader=StubConverter(),
             )
 
-        @get("todos/{id}")
+        @rest.get("todos/{id}")
         def get_todo(self, id: str) -> Todo:
             pass
 
@@ -43,17 +42,16 @@ def test_sync():
 
 @pytest.mark.asyncio
 async def test_async():
+    rest = RestBuilder()
+
     class RealClient(AiohttpClient):
         def __init__(self):
             super().__init__(
                 "https://jsonplaceholder.typicode.com/",
                 ClientSession(),
-                request_body_dumper=StubConverter(),
-                request_params_dumper=StubConverter(),
-                response_body_loader=StubConverter(),
             )
 
-        @get("todos/{id}")
+        @rest.get("todos/{id}")
         async def get_todo(self, id: str) -> Todo:
             pass
 

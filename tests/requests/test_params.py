@@ -5,7 +5,7 @@ import pytest
 import requests
 import requests_mock
 
-from descanso import get, post
+from descanso import RestBuilder
 from descanso.request import RequestTransformer
 from descanso.request_transformers import (
     DeepObjectQuery,
@@ -16,13 +16,17 @@ from descanso.request_transformers import (
 from tests.requests.stubs import StubRequestsClient
 
 
-def test_methods(session: requests.Session, mocker: requests_mock.Mocker):
+def test_methods(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @get("/get")
+        @rest.get("/get")
         def get_x(self) -> list[int]:
             raise NotImplementedError
 
-        @post("/post")
+        @rest.post("/post")
         def post_x(self) -> list[int]:
             raise NotImplementedError
 
@@ -33,9 +37,13 @@ def test_methods(session: requests.Session, mocker: requests_mock.Mocker):
     assert client.post_x() == [1, 2, 3]
 
 
-def test_path_params(session: requests.Session, mocker: requests_mock.Mocker):
+def test_path_params(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @post("/post/{id}")
+        @rest.post("/post/{id}")
         def post_x(self, id) -> list[int]:
             raise NotImplementedError
 
@@ -46,9 +54,13 @@ def test_path_params(session: requests.Session, mocker: requests_mock.Mocker):
     assert client.post_x(2) == [1, 2]
 
 
-def test_query_params(session: requests.Session, mocker: requests_mock.Mocker):
+def test_query_params(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @post("/post/{id}")
+        @rest.post("/post/{id}")
         def post_x(self, id: str, param: int | None) -> list[int]:
             raise NotImplementedError
 
@@ -79,9 +91,13 @@ class RequestBody:
     y: str
 
 
-def test_body(session: requests.Session, mocker: requests_mock.Mocker):
+def test_body(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @post("/post/")
+        @rest.post("/post/")
         def post_x(self, body: RequestBody) -> None:
             raise NotImplementedError
 
@@ -96,9 +112,13 @@ def test_body(session: requests.Session, mocker: requests_mock.Mocker):
     assert mocker.request_history[0].json() == {"x": 1, "y": "test"}
 
 
-def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
+def test_kwonly_param(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @post("/post/")
+        @rest.post("/post/")
         def post(
             self,
             *,
@@ -106,7 +126,7 @@ def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
         ) -> None:
             raise NotImplementedError
 
-        @get("/get/{id}")
+        @rest.get("/get/{id}")
         def get_x(self, *, id: str, param: str = "1") -> list[int]:
             raise NotImplementedError
 
@@ -138,13 +158,14 @@ def test_kwonly_param(session: requests.Session, mocker: requests_mock.Mocker):
     ],
 )
 def test_list_param(
+    rest: RestBuilder,
     session: requests.Session,
     mocker: requests_mock.Mocker,
     transformer: RequestTransformer,
     query: str,
 ):
     class Api(StubRequestsClient):
-        @get("/", last_transformers=[transformer])
+        @rest.get("/", query_param_post_dump=transformer)
         def get(self, ids: list[int]) -> Any:
             raise NotImplementedError
 
@@ -173,13 +194,14 @@ class Param:
     ],
 )
 def test_obj_param(
+    rest: RestBuilder,
     session: requests.Session,
     mocker: requests_mock.Mocker,
     transformer: RequestTransformer,
     query: str,
 ):
     class Api(StubRequestsClient):
-        @get("/", last_transformers=[transformer])
+        @rest.get("/", query_param_post_dump=transformer)
         def get(self, x: Param) -> Any:
             raise NotImplementedError
 
@@ -198,9 +220,13 @@ class MegaParam:
     b: list[Param]
 
 
-def test_php_param(session: requests.Session, mocker: requests_mock.Mocker):
+def test_php_param(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
     class Api(StubRequestsClient):
-        @get("/", last_transformers=[PhpStyleQuery()])
+        @rest.get("/", query_param_post_dump=PhpStyleQuery())
         def get(self, x: MegaParam) -> Any:
             raise NotImplementedError
 
