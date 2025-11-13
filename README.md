@@ -37,7 +37,21 @@ class Todo:
 You need to have `Loader` and `Dumper` implementations, `adaptix.Retort` would be fine
 
 
-**Step 4.** Create and configure client
+**Step 4.** Configure RestBuilder instance. It is needed to reuse common step during request.
+
+```python
+from descanso import RestBuilder
+
+
+rest = RestBuilder(
+    request_body_dumper=Retort(),
+    response_body_loader=Retort(),
+    query_param_dumper=Retort(),
+)
+```
+
+
+**Step 5.** Create client class. Use `RequestsClient` or `AiohttpClient`
 
 ```python
 from adaptix import Retort
@@ -45,87 +59,47 @@ from requests import Session
 from descanso.http.requests import RequestsClient
 
 class RealClient(RequestsClient):
-    def __init__(self):
-        super().__init__(
-            base_url="https://example.com/api",
-            session=Session(),
-            request_params_dumper=Retort(),
-            request_body_dumper=Retort(),
-            response_body_loader=Retort(),
-        )
+    ...
 ```
 
-**Step 5.** Declare methods using `get`/`post`/`delete`/`patch`/`put` decorators.
+**Step 6.** Declare methods using `rest.get`/`rest.post`/`rest.delete`/`rest.patch`/`rest.put` decorators. You can override RestBuilder params if needed. 
 Type hints are required. Body of method is ignored.
 
 Use any method arguments to format URL.
-`body` argument is sent as request body with json. Other arguments, not used in URL are passed as query parameters.
-`get` and `delete` does not have body.
+`body` argument is sent as request body with json. Other arguments, not used in the URL are passed as query parameters.
 
 ```python
 from typing import Optional, List
 from adaptix import Retort
 from requests import Session
-from descanso import get, post, delete
 from descanso.http.requests import RequestsClient
 
 class RealClient(RequestsClient):
-    def __init__(self):
-        super().__init__(
-            base_url="https://example.com/api",
-            session=Session(),
-            request_params_dumper=Retort(),
-            request_body_dumper=Retort(),
-            response_body_loader=Retort(),
-        )
-
-    @get("todos/{id}")
+    @rest.get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
         pass
 
-    @get("todos")
+    @rest.get("todos")
     def list_todos(self, user_id: Optional[int]) -> List[Todo]:
         pass
 
-    @delete("todos/{id}")
+    @rest.delete("todos/{id}")
     def delete_todo(self, id: int):
         pass
 
-    @post("todos")
+    @rest.post("todos")
     def create_todo(self, body: Todo) -> Todo:
         pass
 ```
 
-You can use Callable ```(...) -> str``` as the url source,
-all parameters passed to the client method can be obtained inside the Callable
+**Step 7.** Create client instance and use it.
 
 ```python
-from adaptix import Retort
-from requests import Session
-from descanso import get
-from descanso.http.requests import RequestsClient
-
-def url_generator(todo_id: int) -> str:
-    return f"/todos/{todo_id}/"
-
-
-class RealClient(RequestsClient):
-    def __init__(self):
-        super().__init__(
-            base_url="https://example.com/api",
-            session=Session(),
-            request_params_dumper=Retort(),
-            request_body_dumper=Retort(),
-            response_body_loader=Retort(),
-        )
-
-    @get(url_generator)
-    def todo(self, todo_id: int) -> Todo:
-        pass
-
-
-client = RealClient()
-client.todo(5)
+client = RealClient(
+    base_url="https://example.com/api",
+    session=Session()
+)
+client.get_todo(5)
 ```
 
 ## Asyncio
@@ -135,7 +109,3 @@ To use async client instead of sync:
 1. Install `aiohttp` (instead of `requests`)
 2. Change `descanso.http.requests.RequestsClient` to `descanso.http.aiohttp.AiohttpClient`
 3. All methods will be async, but you can add `async` keyword to make it more verbose
-
-## Configuration
-
-TBD
