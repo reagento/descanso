@@ -43,7 +43,6 @@ rest = RestBuilder(
 
 class RealClient(RequestsClient):
     def __init__(self):
-        adapter = PydanticAdapter()
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
             session=Session(),

@@ -1,6 +1,5 @@
 from collections.abc import Awaitable, Callable
 from typing import (
-    Annotated,
     Any,
     Concatenate,
     ParamSpec,
@@ -14,7 +13,7 @@ try:
     from typing import Unpack
 except ImportError:
     T = TypeVar("T")
-    Unpack = Annotated[Any, T]
+    Unpack = Any | T
 
 from descanso import Dumper, Loader
 from descanso.method_descriptor import MethodBinder

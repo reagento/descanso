@@ -32,9 +32,6 @@ rest = RestBuilder(
 
 class RealAsyncClient(AiohttpClient):
     def __init__(self, session: ClientSession):
-        retort = Retort(recipe=[
-            name_mapping(name_style=NameStyle.CAMEL),
-        ])
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
             session=session,
