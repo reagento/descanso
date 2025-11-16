@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
@@ -59,6 +60,25 @@ class FieldOut:
 
 @runtime_checkable
 class RequestTransformer(Protocol):
+    @abstractmethod
+    def transform_fields(
+        self,
+        fields_in: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def transform_request(
+        self,
+        request: HttpRequest,
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
+        data: dict[str, Any],
+    ) -> HttpRequest:
+        raise NotImplementedError
+
+
+class BaseRequestTransformer(RequestTransformer):
     def transform_fields(
         self,
         fields_in: Sequence[FieldIn],
@@ -72,4 +92,40 @@ class RequestTransformer(Protocol):
         fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
+        return request
+
+    def __or__(self, other: RequestTransformer) -> "PipeRequestTransformer":
+        return PipeRequestTransformer(self, other)
+
+    def __ror__(self, other: RequestTransformer) -> "PipeRequestTransformer":
+        return PipeRequestTransformer(other, self)
+
+
+class PipeRequestTransformer(BaseRequestTransformer):
+    def __init__(self, *others: RequestTransformer) -> None:
+        self.others = others
+
+    def transform_fields(
+        self,
+        fields_in: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
+        res = []
+        for other in self.others:
+            res.extend(other.transform_fields(fields_in))
+        return res
+
+    def transform_request(
+        self,
+        request: HttpRequest,
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
+        data: dict[str, Any],
+    ) -> HttpRequest:
+        for other in self.others:
+            request = other.transform_request(
+                request,
+                fields_in,
+                fields_out,
+                data,
+            )
         return request

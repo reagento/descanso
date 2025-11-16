@@ -168,3 +168,11 @@ Status code
 ------------------------
 
 Status code checkin is done by an ``ErrorRaiser`` class set as a ``error_raiser`` parameter.
+
+You can join multiple transofrmers using ``|`` if you want different logic.
+
+.. code-block:: python
+
+    rest = RestBuilder(
+        error_raiser=ErrorRaiser(codes=[422], need_body=True) | ErrorRaiser()
+    )

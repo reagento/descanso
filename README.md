@@ -40,6 +40,7 @@ You need to have `Loader` and `Dumper` implementations, `adaptix.Retort` would b
 **Step 4.** Configure RestBuilder instance. It is needed to reuse common step during request.
 
 ```python
+from adaptix import Retort
 from descanso import RestBuilder
 
 
@@ -54,8 +55,6 @@ rest = RestBuilder(
 **Step 5.** Create client class. Use `RequestsClient` or `AiohttpClient`
 
 ```python
-from adaptix import Retort
-from requests import Session
 from descanso.http.requests import RequestsClient
 
 class RealClient(RequestsClient):
@@ -69,9 +68,6 @@ Use any method arguments to format URL.
 `body` argument is sent as request body with json. Other arguments, not used in the URL are passed as query parameters.
 
 ```python
-from typing import Optional, List
-from adaptix import Retort
-from requests import Session
 from descanso.http.requests import RequestsClient
 
 class RealClient(RequestsClient):
@@ -80,7 +76,7 @@ class RealClient(RequestsClient):
         pass
 
     @rest.get("todos")
-    def list_todos(self, user_id: Optional[int]) -> List[Todo]:
+    def list_todos(self, user_id: int | None) -> list[Todo]:
         pass
 
     @rest.delete("todos/{id}")
@@ -95,6 +91,8 @@ class RealClient(RequestsClient):
 **Step 7.** Create client instance and use it.
 
 ```python
+from requests import Session
+
 client = RealClient(
     base_url="https://example.com/api",
     session=Session()

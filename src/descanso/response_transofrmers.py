@@ -26,11 +26,7 @@ class BodyModelLoad(ResponseTransformer):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}"
-            f"("
-            f"{self.type_hint!r}, "
-            f"{self.loader!r}"
-            f")"
+            f"{self.__class__.__name__}({self.type_hint!r}, {self.loader!r})"
         )
 
 
