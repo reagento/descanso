@@ -10,6 +10,13 @@
 
 A modern and simple way to create clients for REST like APIs
 
+
+
+> If you are looking for `dataclass-rest`, this is the same project with a new name.
+> 
+> We had reworked it a lot, but old code is still available in a separate [branch](https://github.com/reagento/descanso/tree/dataclass-rest).
+
+
 ## Quickstart
 
 
