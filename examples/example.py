@@ -1,11 +1,14 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional, List
+from io import BytesIO
+from typing import Any
 
-from adaptix import Retort, name_mapping, NameStyle
+from adaptix import NameStyle, Retort, name_mapping
+from requests import Session
 
-from dataclass_rest import get, post, delete, File
-from dataclass_rest.http.requests import RequestsClient
+from descanso.http.requests import RequestsClient
+from descanso.request_transformers import File
+from descanso import RestBuilder
 
 
 @dataclass
@@ -16,40 +19,51 @@ class Todo:
     completed: bool
 
 
+retort = Retort(
+    recipe=[
+        name_mapping(name_style=NameStyle.CAMEL),
+    ]
+)
+rest = RestBuilder(
+    request_body_dumper=retort,
+    response_body_loader=retort,
+    query_param_dumper=Retort(),
+)
+
+
 class RealClient(RequestsClient):
     def __init__(self):
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
+            session=Session(),
         )
 
-    def _init_request_body_factory(self) -> Retort:
-        return Retort(recipe=[
-            name_mapping(name_style=NameStyle.CAMEL),
-        ])
-
-    @get("todos/{id}")
+    @rest.get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
-        pass
+        """GET method with path param"""
 
-    @get("todos")
-    def list_todos(self, user_id: Optional[int]) -> List[Todo]:
-        pass
+    @rest.get("todos")
+    def list_todos(self, user_id: int | None) -> list[Todo]:
+        """GET method with query params"""
 
-    @delete("todos/{id}")
+    @rest.delete("todos/{id}")
     def delete_todo(self, id: int):
-        pass
+        """DELETE method"""
 
-    @post("todos")
-    def create_todo(self, body: Todo) -> Todo:
-        """Создаем Todo"""
+    @rest.post("todos")
+    async def create_todo(self, body: Todo) -> Todo:
+        """POST method"""
 
-    @get("https://httpbin.org/get")
-    def get_httpbin(self):
-        """Используем другой base_url"""
+    @rest.get("https://httpbin.org/get")
+    def get_httpbin(self) -> Any:
+        """Url different from base_url"""
 
-    @post("https://httpbin.org/post")
-    def upload_image(self, file: File):
-        """Загружаем картинку"""
+    @rest.post(
+        "https://httpbin.org/post",
+        File("file"),
+    )
+    def upload_image(self, file: BytesIO):
+        """Sending binary data"""
 
 
 logging.basicConfig(level=logging.INFO)
@@ -59,4 +73,5 @@ print(client.get_todo(id="1"))
 print(client.delete_todo(1))
 print(client.create_todo(Todo(123456789, 111222333, "By Tishka17", False)))
 print(client.get_httpbin())
-print(client.upload_image(File(open("example.py", "rb"))))
+with open("example.py", "rb") as f:
+    print(client.upload_image(f))

@@ -1,12 +1,13 @@
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
-from adaptix import NameStyle, Retort, name_mapping
+from aiohttp import ClientSession
 from requests import Session
 
-from dataclass_rest import get
-from dataclass_rest.http.aiohttp import AiohttpClient
-from dataclass_rest.http.requests import RequestsClient
+from descanso import Dumper, Loader, RestBuilder
+from descanso.http.aiohttp import AiohttpClient
+from descanso.http.requests import RequestsClient
 
 
 @dataclass
@@ -14,7 +15,17 @@ class Todo:
     id: int
 
 
+class StubConverter(Loader, Dumper):
+    def load(self, data: Any, class_: Any) -> Any:
+        return data
+
+    def dump(self, data: Any, class_: Any) -> Any:
+        return data
+
+
 def test_sync():
+    rest = RestBuilder()
+
     class RealClient(RequestsClient):
         def __init__(self):
             super().__init__(
@@ -22,14 +33,7 @@ def test_sync():
                 Session(),
             )
 
-        def _init_request_body_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.CAMEL),
-                ],
-            )
-
-        @get("todos/{id}")
+        @rest.get("todos/{id}")
         def get_todo(self, id: str) -> Todo:
             pass
 
@@ -38,20 +42,21 @@ def test_sync():
 
 @pytest.mark.asyncio
 async def test_async():
+    rest = RestBuilder()
+
     class RealClient(AiohttpClient):
         def __init__(self):
-            super().__init__("https://jsonplaceholder.typicode.com/")
-
-        def _init_request_body_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.CAMEL),
-                ],
+            super().__init__(
+                "https://jsonplaceholder.typicode.com/",
+                ClientSession(),
             )
 
-        @get("todos/{id}")
+        @rest.get("todos/{id}")
         async def get_todo(self, id: str) -> Todo:
             pass
 
+        async def close(self):
+            await self._session.close()
+
     client = RealClient()
-    await client.session.close()
+    await client.close()

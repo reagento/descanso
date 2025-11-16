@@ -3,8 +3,8 @@ typing_extensions
 aiohttp
 requests
 requests-mock
-mypy
 pytest
 pytest-asyncio
 
-ruff==0.5.*
+mypy==1.18.*
+ruff==0.14.*

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from adaptix import NameStyle, Retort, name_mapping
+import requests_mock
+from adaptix import NameStyle, Retort, dumper, name_mapping
+from requests import Session
 
-from dataclass_rest import patch
-from dataclass_rest.http.requests import RequestsClient
+from descanso import RestBuilder
+from descanso.http.requests import RequestsClient
 
 
 class Selection(Enum):
@@ -24,39 +26,46 @@ class ResponseBody:
     selection: Selection
 
 
-def test_body(session, mocker):
+def api(session: Session):
+    rest = RestBuilder(
+        request_body_dumper=Retort(
+            recipe=[
+                name_mapping(name_style=NameStyle.CAMEL),
+            ],
+        ),
+        query_param_dumper=Retort(
+            recipe=[
+                dumper(str, lambda x: f"1{x}"),
+            ],
+        ),
+        response_body_loader=Retort(
+            recipe=[
+                name_mapping(name_style=NameStyle.LOWER_KEBAB),
+            ],
+        ),
+    )
+
     class Api(RequestsClient):
-        def _init_request_body_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.CAMEL),
-                ],
+        def __init__(self, session):
+            super().__init__(
+                base_url="https://example.com/",
+                session=session,
             )
 
-        def _init_request_args_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.UPPER_DOT),
-                ],
-            )
-
-        def _init_response_body_factory(self) -> Retort:
-            return Retort(
-                recipe=[
-                    name_mapping(name_style=NameStyle.LOWER_KEBAB),
-                ],
-            )
-
-        @patch("/post/")
+        @rest.patch("/post/")
         def post_x(self, long_param: str, body: RequestBody) -> ResponseBody:
             raise NotImplementedError
 
+    return Api(session)
+
+
+def test_body(session, mocker: requests_mock.Mocker):
     mocker.patch(
-        url="http://example.com/post/?LONG.PARAM=hello",
+        url="https://example.com/post/?long_param=1hello",
         text="""{"int-param": 1, "selection": "TWO"}""",
         complete_qs=True,
     )
-    client = Api(base_url="http://example.com", session=session)
+    client = api(session)
     result = client.post_x(
         long_param="hello",
         body=RequestBody(int_param=42, selection=Selection.ONE),
