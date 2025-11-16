@@ -29,7 +29,7 @@ def test_ok() -> None:
 
 
 def test_client_error() -> None:
-    error_raiser = ErrorRaiser(except_codes=[], codes=[])
+    error_raiser = ErrorRaiser(except_codes=None, codes=None)
     response = HttpResponse(status_code=404, status_text="not_found")
 
     assert_client_error(error_raiser, response)
@@ -49,7 +49,7 @@ def test_server_error() -> None:
 
 
 def test_codes() -> None:
-    error_raiser = ErrorRaiser(codes=[201], except_codes=[])
+    error_raiser = ErrorRaiser(codes=[201], except_codes=None)
     good_response = HttpResponse(status_code=200, status_text="ok")
     bad_response = HttpResponse(status_code=201, status_text="created")
 
@@ -63,7 +63,7 @@ def test_codes() -> None:
 
 
 def test_except_codes() -> None:
-    error_raiser = ErrorRaiser(except_codes=[201], codes=[])
+    error_raiser = ErrorRaiser(except_codes=[201])
     good_response = HttpResponse(status_code=201, status_text="created")
     bad_response = HttpResponse(status_code=200, status_text="ok")
 
