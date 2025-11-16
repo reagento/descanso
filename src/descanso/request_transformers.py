@@ -7,13 +7,13 @@ from typing import Any, get_type_hints
 
 from .client import Dumper
 from .request import (
+    BaseRequestTransformer,
     FieldDestintation,
     FieldIn,
     FieldOut,
     FileData,
     HttpRequest,
     KeyValue,
-    RequestTransformer,
 )
 
 
@@ -38,7 +38,7 @@ def get_params_from_callable(
 DataTemplate = Callable[[dict[str, Any]], Any] | str | None
 
 
-class DestTransformer(RequestTransformer):
+class DestTransformer(BaseRequestTransformer):
     def __init__(
         self,
         name_out: str,
@@ -131,7 +131,7 @@ class Query(DestTransformer):
         )
 
 
-class Url(RequestTransformer):
+class Url(BaseRequestTransformer):
     def __init__(self, template: Callable | str):
         self._field_out = FieldOut(
             name=None,
@@ -171,7 +171,7 @@ class Url(RequestTransformer):
         return f"{self.__class__.__name__}({self._original_template!r})"
 
 
-class File(RequestTransformer):
+class File(BaseRequestTransformer):
     def __init__(
         self,
         arg: str,
@@ -228,7 +228,7 @@ class File(RequestTransformer):
         )
 
 
-class Body(RequestTransformer):
+class Body(BaseRequestTransformer):
     def __init__(self, arg: str):
         self.arg = arg
 
@@ -262,7 +262,7 @@ class Body(RequestTransformer):
         return f"{self.__class__.__name__}({self.arg!r})"
 
 
-class BodyModelDump(RequestTransformer):
+class BodyModelDump(BaseRequestTransformer):
     def __init__(self, dumper: Dumper) -> None:
         self.dumper = dumper
 
@@ -288,7 +288,7 @@ class BodyModelDump(RequestTransformer):
         return f"{self.__class__.__name__}({self.dumper!r})"
 
 
-class QueryModelDump(RequestTransformer):
+class QueryModelDump(BaseRequestTransformer):
     def __init__(self, dumper: Dumper) -> None:
         self.dumper = dumper
 
@@ -314,7 +314,7 @@ class QueryModelDump(RequestTransformer):
         return f"{self.__class__.__name__}({self.dumper!r})"
 
 
-class JsonDump(RequestTransformer):
+class JsonDump(BaseRequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
@@ -330,7 +330,7 @@ class JsonDump(RequestTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class Method(RequestTransformer):
+class Method(BaseRequestTransformer):
     def __init__(self, method: str) -> None:
         self.method = method
 
@@ -348,7 +348,7 @@ class Method(RequestTransformer):
         return f"{self.__class__.__name__}({self.method!r})"
 
 
-class Skip(RequestTransformer):
+class Skip(BaseRequestTransformer):
     def __init__(
         self,
         arg: str | None = None,
@@ -367,7 +367,7 @@ class Skip(RequestTransformer):
         return []
 
 
-class DelimiterQuery(RequestTransformer):
+class DelimiterQuery(BaseRequestTransformer):
     def __init__(self, separator: str = ",") -> None:
         self.separator = separator
 
@@ -400,7 +400,7 @@ class DelimiterQuery(RequestTransformer):
         return f"{self.__class__.__name__}({self.separator!r})"
 
 
-class DeepObjectQuery(RequestTransformer):
+class DeepObjectQuery(BaseRequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
@@ -425,7 +425,7 @@ class DeepObjectQuery(RequestTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class PhpStyleQuery(RequestTransformer):
+class PhpStyleQuery(BaseRequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,
@@ -453,7 +453,7 @@ class PhpStyleQuery(RequestTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class FormQuery(RequestTransformer):
+class FormQuery(BaseRequestTransformer):
     def transform_request(
         self,
         request: HttpRequest,

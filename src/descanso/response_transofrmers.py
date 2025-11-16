@@ -4,10 +4,10 @@ from typing import Any
 
 from .client import Loader
 from .exceptions import ClientError, ServerError
-from .response import HttpResponse, ResponseTransformer
+from .response import BaseResponseTransformer, HttpResponse
 
 
-class BodyModelLoad(ResponseTransformer):
+class BodyModelLoad(BaseResponseTransformer):
     def __init__(
         self,
         type_hint: Any,
@@ -30,7 +30,7 @@ class BodyModelLoad(ResponseTransformer):
         )
 
 
-class JsonLoad(ResponseTransformer):
+class JsonLoad(BaseResponseTransformer):
     def __init__(self, codes: Sequence[int] = (200, 201, 202)):
         self.codes = codes
 
@@ -51,7 +51,7 @@ class JsonLoad(ResponseTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class ErrorRaiser(ResponseTransformer):
+class ErrorRaiser(BaseResponseTransformer):
     def __init__(
         self,
         *,
@@ -90,7 +90,7 @@ class ErrorRaiser(ResponseTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class KeepResponse(ResponseTransformer):
+class KeepResponse(BaseResponseTransformer):
     def __init__(self, *, need_body: bool):
         self._need_body = need_body
 
