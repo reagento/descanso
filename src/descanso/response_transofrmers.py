@@ -12,22 +12,15 @@ class BodyModelLoad(ResponseTransformer):
         self,
         type_hint: Any,
         loader: Loader | None,
-        codes: Sequence[int] = (200, 201, 202),
     ) -> None:
         self.type_hint = type_hint
-        self.codes = codes
         self.loader = loader
-
-    def need_response_body(self, response: HttpResponse) -> bool:
-        return response.status_code in self.codes
 
     def transform_response(
         self,
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        if response.status_code not in self.codes:
-            return response
         response.body = self.loader.load(response.body, self.type_hint)
         return response
 
@@ -36,8 +29,7 @@ class BodyModelLoad(ResponseTransformer):
             f"{self.__class__.__name__}"
             f"("
             f"{self.type_hint!r}, "
-            f"codes={self.codes!r}, "
-            f"loader={self.loader!r}"
+            f"{self.loader!r}"
             f")"
         )
 

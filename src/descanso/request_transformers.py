@@ -351,7 +351,7 @@ class Method(RequestTransformer):
 class Skip(RequestTransformer):
     def __init__(
         self,
-        arg: str,
+        arg: str | None = None,
     ):
         self.arg = arg
 
@@ -359,6 +359,8 @@ class Skip(RequestTransformer):
         self,
         fields: Sequence[FieldIn],
     ) -> Sequence[FieldOut]:
+        if not self.arg:
+            return []
         for field in fields:
             if field.name == self.arg:
                 field.consumed_by.append(self)
