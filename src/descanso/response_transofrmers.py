@@ -12,7 +12,7 @@ class BodyModelLoad(ResponseTransformer):
         self,
         type_hint: Any,
         loader: Loader | None,
-        codes: Sequence[int] = (200,),
+        codes: Sequence[int] = (200, 201, 202),
     ) -> None:
         self.type_hint = type_hint
         self.codes = codes
@@ -43,7 +43,7 @@ class BodyModelLoad(ResponseTransformer):
 
 
 class JsonLoad(ResponseTransformer):
-    def __init__(self, codes: Sequence[int] = (200,)):
+    def __init__(self, codes: Sequence[int] = (200, 201, 202)):
         self.codes = codes
 
     def need_response_body(self, response: HttpResponse) -> bool:
