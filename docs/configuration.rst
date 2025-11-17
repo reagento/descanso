@@ -47,7 +47,7 @@ To generate a query parameter dynamically use ``Query(name, template)``. Templat
 
 In case you are using complex objects as query parameters you might want to have sem serialized properly.
 
-Firstly, you need to set ``Dumper`` for convertion dataclasses into simple dicts. It is done by ``query_param_dumper`` parameter of ``RestBuilder`` or method itself.
+Firstly, you need to set ``Dumper`` for conversion dataclasses into simple dicts. It is done by ``query_param_dumper`` parameter of ``RestBuilder`` or method itself.
 
 .. code-block:: python
 
@@ -81,7 +81,7 @@ You can select between:
 Headers
 -----------------------------------
 
-Headers can be simply set in the same way as query parameters. Just use ``Header()`` transformer. The defference is that no additional processing is done automatically.
+Headers can be simply set in the same way as query parameters. Just use ``Header()`` transformer. The difference is that no additional processing is done automatically.
 
 .. code-block:: python
 
@@ -170,7 +170,7 @@ Status code
 
 Status code checkin is done by an ``ErrorRaiser`` class set as a ``error_raiser`` parameter.
 
-You can join multiple transofrmers using ``|`` if you want different logic.
+You can join multiple transformers using ``|`` if you want different logic.
 
 .. code-block:: python
 
