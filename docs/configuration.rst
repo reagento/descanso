@@ -52,7 +52,7 @@ Firstly, you need to set ``Dumper`` for convertion dataclasses into simple dicts
 .. code-block:: python
 
     from adaptix import Retort
-    from descanso improt RestBuilder
+    from descanso import RestBuilder
 
 
     rest = RestBuilder(
@@ -117,7 +117,7 @@ After dumping body is converted to plain text using ``request_body_post_dump`` w
 .. code-block:: python
 
     from adaptix import Retort
-    from descanso improt RestBuilder
+    from descanso import RestBuilder
 
 
     rest = RestBuilder(

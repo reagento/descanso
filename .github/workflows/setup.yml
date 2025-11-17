@@ -10,7 +10,7 @@ on:
     branches: [ "develop" ]
 
 jobs:
-  cpython:
+  testing:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -43,7 +43,59 @@ jobs:
       run: |
         pytest
 
+    - name: Run spell check
+      run: |
+        typos src/ tests/ examples/ docs/ --config _typos.toml
+
     - name: Build doc
       run: |
         pip install -r requirements_doc.txt
         sphinx-build -M html docs docs-build -W
+
+    - name: Run zizmor
+      run: zizmor .github
+
+    - name: Store coverage file
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      if: ${{ github.event_name == 'pull_request' }}
+      with:
+        name: coverage-${{ matrix.python-version }}
+        path: .coverage.${{ matrix.python-version }}
+        if-no-files-found: error
+        include-hidden-files: true
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: testing
+    permissions:
+      pull-requests: write
+      contents: write
+
+    if: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+        id: download
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+
+      - name: Coverage comment
+        id: coverage_comment
+        uses: py-cov-action/python-coverage-comment-action@e623398c19eb3853a5572d4a516e10b15b5cefbc
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_COVERAGE_FILES: true
+          MINIMUM_GREEN: 90
+
+      - name: Store Pull Request comment to be posted (for external pr)
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        if: steps.coverage_comment.outputs.COMMENT_FILE_WRITTEN == 'true'
+        with:
+          name: python-coverage-comment-action
+          path: python-coverage-comment-action.txt
