@@ -18,7 +18,7 @@ except ImportError:
 from descanso import Dumper, Loader
 from descanso.method_descriptor import MethodBinder
 from descanso.method_spec import MethodSpec
-from descanso.request import FieldDestintation, FieldOut, RequestTransformer
+from descanso.request import FieldDestination, FieldOut, RequestTransformer
 from descanso.request_transformers import (
     Body,
     BodyModelDump,
@@ -30,7 +30,7 @@ from descanso.request_transformers import (
     Url,
 )
 from descanso.response import HttpResponse, ResponseTransformer
-from descanso.response_transofrmers import (
+from descanso.response_transformers import (
     BodyModelLoad,
     ErrorRaiser,
     JsonLoad,
@@ -182,7 +182,7 @@ class RestBuilder(Decorator):
 
     def _get_body_field(self, spec: MethodSpec) -> FieldOut | None:
         for field in spec.fields_out:
-            if field.dest is FieldDestintation.BODY:
+            if field.dest is FieldDestination.BODY:
                 return field
         return None
 

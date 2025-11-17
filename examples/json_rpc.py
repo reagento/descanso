@@ -10,13 +10,13 @@ from descanso.http.requests import RequestsClient
 from descanso.method_descriptor import MethodBinder
 from descanso.method_spec import MethodSpec
 from descanso.request import (
-    FieldDestintation,
+    FieldDestination,
     HttpRequest,
     RequestTransformer, FieldIn, FieldOut,
 )
 from descanso.request_transformers import Body, JsonDump, Method, BodyModelDump
 from descanso.response import HttpResponse, ResponseTransformer
-from descanso.response_transofrmers import (
+from descanso.response_transformers import (
     ErrorRaiser,
     JsonLoad,
     KeepResponse,
@@ -101,7 +101,7 @@ def jsonrpc(
             is_in_class=True,
         )
         body_out = next(
-            (field for field in spec.fields_out if field.dest is FieldDestintation.BODY),
+            (field for field in spec.fields_out if field.dest is FieldDestination.BODY),
             None,
         )
         for field in spec.fields_in:
