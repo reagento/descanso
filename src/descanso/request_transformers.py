@@ -8,7 +8,7 @@ from typing import Any, get_type_hints
 from .client import Dumper
 from .request import (
     BaseRequestTransformer,
-    FieldDestintation,
+    FieldDestination,
     FieldIn,
     FieldOut,
     FileData,
@@ -43,7 +43,7 @@ class DestTransformer(BaseRequestTransformer):
         self,
         name_out: str,
         template: DataTemplate,
-        dest: FieldDestintation,
+        dest: FieldDestination,
     ) -> None:
         self.name_out = name_out
         self.dest = dest
@@ -109,7 +109,7 @@ class Header(DestTransformer):
         super().__init__(
             name_out=header,
             template=template,
-            dest=FieldDestintation.HEADER,
+            dest=FieldDestination.HEADER,
         )
 
 
@@ -118,7 +118,7 @@ class Extra(DestTransformer):
         super().__init__(
             name_out=header,
             template=template,
-            dest=FieldDestintation.EXTRA,
+            dest=FieldDestination.EXTRA,
         )
 
 
@@ -127,7 +127,7 @@ class Query(DestTransformer):
         super().__init__(
             name_out=name_out,
             template=template,
-            dest=FieldDestintation.QUERY,
+            dest=FieldDestination.QUERY,
         )
 
 
@@ -135,7 +135,7 @@ class Url(BaseRequestTransformer):
     def __init__(self, template: Callable | str):
         self._field_out = FieldOut(
             name=None,
-            dest=FieldDestintation.URL,
+            dest=FieldDestination.URL,
             type_hint=str,
         )
         self._original_template = template
@@ -185,7 +185,7 @@ class File(BaseRequestTransformer):
         self.content_type = content_type
         self.field_out = FieldOut(
             name=self.filefield,
-            dest=FieldDestintation.FILE,
+            dest=FieldDestination.FILE,
             type_hint=Any,
         )
 
@@ -242,7 +242,7 @@ class Body(BaseRequestTransformer):
                 return [
                     FieldOut(
                         name=None,
-                        dest=FieldDestintation.BODY,
+                        dest=FieldDestination.BODY,
                         type_hint=field.type_hint,
                     ),
                 ]
@@ -277,7 +277,7 @@ class BodyModelDump(BaseRequestTransformer):
             (
                 f.type_hint
                 for f in fields_out
-                if f.dest == FieldDestintation.BODY
+                if f.dest == FieldDestination.BODY
             ),
             Any,
         )
@@ -302,7 +302,7 @@ class QueryModelDump(BaseRequestTransformer):
         types = {
             f.name: f.type_hint
             for f in fields_out
-            if f.dest == FieldDestintation.QUERY
+            if f.dest == FieldDestination.QUERY
         }
         request.query_params = [
             (name, self.dumper.dump(value, types.get(name, Any)))

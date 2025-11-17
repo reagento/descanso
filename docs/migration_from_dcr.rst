@@ -124,7 +124,7 @@ Custom client and method classes
 In ``dataclass_rest`` part of request processing was done in Client class while another one is located in BoundMethod. In descanso you have 2 main things:
 
 1. Client contains ``send_request`` or ``asend_request`` method. They send request and return ``SyncResponseWrapper``/``AsyncResponseWrapper`` instance
-2. Response Wrapper is an extention to ``HttpResponse`` which allows you to load body during response processing.
+2. Response Wrapper is an extension to ``HttpResponse`` which allows you to load body during response processing.
 
 Earlier you had several reasons to override methods
 

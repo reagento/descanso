@@ -34,7 +34,7 @@ class HttpRequest:
     method: str = "GET"
 
 
-class FieldDestintation(Enum):
+class FieldDestination(Enum):
     URL = "url"
     HEADER = "headers"
     BODY = "body"
@@ -54,7 +54,7 @@ class FieldIn:
 @dataclass
 class FieldOut:
     name: str | None
-    dest: FieldDestintation
+    dest: FieldDestination
     type_hint: Any
 
 
