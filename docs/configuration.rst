@@ -138,20 +138,21 @@ Response configuration
 Response body
 -------------------------------
 
-You can change ``response_body_pre_load`` to load raw data to python structure than processed by ``Loader``. By default, json is loaded using ``JsonLoad``
+You can change ``response_body_pre_load`` to load raw data to python structure than processed by ``Loader``.
+By default, json is loaded using ``JsonLoad`` at status codes 200, 201, 202.
 
 
-You can set ``response_body_loader`` to provide a ``Loader`` instance for converting structure to you dataclass or model accoridng to a return type hint.
+You can set ``response_body_loader`` to provide a ``Loader`` instance for converting structure to you dataclass or model according to a return type hint.
 
 .. code-block:: python
 
     from adaptix import Retort
-    from descanso improt RestBuilder
+    from descanso import RestBuilder
 
 
     rest = RestBuilder(
         response_body_loader=Retort(),
-        request_body_post_dump=JsonLoad(),
+        response_body_pre_load=JsonLoad(),
     )
 
 
