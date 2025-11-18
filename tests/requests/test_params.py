@@ -69,8 +69,8 @@ def test_query_params(
         @rest.post(
             "/post2/",
             Query("body"),
-            Query("x","{body2}"),
-            Query("y", lambda body2, body3: body2+body3),
+            Query("x", "{body2}"),
+            Query("y", lambda body2, body3: body2 + body3),
         )
         def post_y(self, body: int, body2: int, body3: int) -> list[int]:
             raise NotImplementedError
