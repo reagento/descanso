@@ -29,13 +29,13 @@ def get_params_from_string(template: str) -> list[str]:
 
 
 def get_params_from_callable(
-    template: Callable[[dict[str, Any]], Any],
+    template: Callable[..., Any],
 ) -> list[str]:
     url_template_func_arg_spec = getfullargspec(template)
     return url_template_func_arg_spec.args
 
 
-DataTemplate = Callable[[dict[str, Any]], Any] | str | None
+DataTemplate = Callable[..., Any] | str | None
 
 
 class DestTransformer(BaseRequestTransformer):

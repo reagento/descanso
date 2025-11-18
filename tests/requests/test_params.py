@@ -12,6 +12,8 @@ from descanso.request_transformers import (
     DelimiterQuery,
     FormQuery,
     PhpStyleQuery,
+    Query,
+    Skip,
 )
 from tests.requests.stubs import StubRequestsClient
 
@@ -64,6 +66,15 @@ def test_query_params(
         def post_x(self, id: str, param: int | None) -> list[int]:
             raise NotImplementedError
 
+        @rest.post(
+            "/post2/",
+            Query("body"),
+            Query("x","{body2}"),
+            Query("y", lambda body2, body3: body2+body3),
+        )
+        def post_y(self, body: int, body2: int, body3: int) -> list[int]:
+            raise NotImplementedError
+
     mocker.post(
         url="https://example.com/post/x?",
         text="[0]",
@@ -79,10 +90,16 @@ def test_query_params(
         text="[1,2]",
         complete_qs=True,
     )
+    mocker.post(
+        url="https://example.com/post2/?body=1&x=2&y=5",
+        text="[42]",
+        complete_qs=True,
+    )
     client = Api(session=session)
     assert client.post_x("x", None) == [0]
     assert client.post_x("x", 1) == [1]
     assert client.post_x("x", 2) == [1, 2]
+    assert client.post_y(1, 2, 3) == [42]
 
 
 @dataclass
@@ -110,6 +127,26 @@ def test_body(
     assert client.post_x(RequestBody(x=1, y="test")) is None
     assert mocker.called_once
     assert mocker.request_history[0].json() == {"x": 1, "y": "test"}
+
+
+def test_skip(
+    rest: RestBuilder,
+    session: requests.Session,
+    mocker: requests_mock.Mocker,
+):
+    class Api(StubRequestsClient):
+        @rest.post("/post/", Skip(), Skip("x"))
+        def post_x(self, x: int, y: int) -> None:
+            raise NotImplementedError
+
+    mocker.post(
+        url="https://example.com/post/?y=2",
+        text="null",
+        complete_qs=True,
+    )
+    client = Api(session=session)
+    assert client.post_x(x=1, y=2) is None
+    assert mocker.called_once
 
 
 def test_kwonly_param(
