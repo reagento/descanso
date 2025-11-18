@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   testing:
+    name: Testing (${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -47,6 +48,7 @@ jobs:
     - name: Run tests
       run: |
         pytest
+        mv .coverage .coverage.${{ matrix.python-version }}
 
     - name: Run spell check
       run: |
