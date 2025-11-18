@@ -247,6 +247,20 @@ class RestBuilder(Decorator):
                 BodyModelLoad(spec.result_type, loader=loader),
             )
 
+    @overload
+    def __call__(
+        self,
+        func: Callable[
+            Concatenate[Any, _MethodParamSpec], Awaitable[_MethodResultT],
+        ],
+    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
+
+    @overload
+    def __call__(
+        self,
+        func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],
+    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
+
     def __call__(
         self,
         func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],

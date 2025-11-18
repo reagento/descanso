@@ -45,13 +45,14 @@ async def server():
 @pytest.mark.asyncio
 async def test_simple(server):
     rest = RestBuilder()
+
     class Api(AiohttpClient):
         @rest.post(
             "/",
-           File("f1"),
-           File("f2", filefield="x2"),
-           File("f3", filefield="x3", filename="z"),
-           File("f4", filefield="x4", filename="z", content_type="other"),
+            File("f1"),
+            File("f2", filefield="x2"),
+            File("f3", filefield="x3", filename="z"),
+            File("f4", filefield="x4", filename="z", content_type="other"),
         )
         async def send(self, f1, f2, f3, f4) -> list[int]:
             raise NotImplementedError
