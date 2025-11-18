@@ -22,8 +22,10 @@ A modern and simple way to create clients for REST like APIs
 
 **Step 1.** Install
 ```bash
-pip install descanso requests
+pip install descanso requests adaptix
 ```
+
+`requests` and `adaptix` are optional dependencies, but we will use them in quickstart.
 
 
 **Step 2.** Declare models
