@@ -75,10 +75,21 @@ def test_except_codes() -> None:
     assert transformed_good_response == good_response
 
 
-def test_except_codes_wider_than_codes() -> None:
-    except_codes = [200, 201, 202, 204]
-    except_codes_descriptions = ["ok", "created", "accepted", "no_content"]
-    codes = [202, 204]
+@pytest.mark.parametrize(
+    ("except_codes", "except_codes_descriptions", "codes"),
+    [
+        (
+            [200, 201, 202, 204],
+            ["ok", "created", "accepted", "no_content"],
+            [202, 204],
+        ),
+    ],
+)
+def test_except_codes_wider_than_codes(
+    except_codes: list[int],
+    except_codes_descriptions: list[str],
+    codes: list[int],
+) -> None:
     error_raiser = ErrorRaiser(except_codes=except_codes, codes=codes)
 
     bad_response = HttpResponse(status_code=302, status_text="found")
@@ -103,10 +114,21 @@ def test_except_codes_wider_than_codes() -> None:
         assert_client_error(error_raiser, response)
 
 
-def test_codes_wider_than_except_codes() -> None:
-    codes = [200, 201, 202, 204]
-    except_codes = [202, 204]
-    except_codes_descriptions = ["accepted", "no_content"]
+@pytest.mark.parametrize(
+    ("except_codes", "except_codes_descriptions", "codes"),
+    [
+        (
+            [202, 204],
+            ["accepted", "no_content"],
+            [200, 201, 202, 204],
+        ),
+    ],
+)
+def test_codes_wider_than_except_codes(
+    except_codes: list[int],
+    except_codes_descriptions: list[str],
+    codes: list[int],
+) -> None:
     error_raiser = ErrorRaiser(except_codes=except_codes, codes=codes)
 
     bad_response = HttpResponse(status_code=302, status_text="found")
