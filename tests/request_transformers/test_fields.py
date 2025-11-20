@@ -1,0 +1,185 @@
+from typing import Any
+
+import pytest
+
+from descanso.request import FieldDestination, FieldIn, FieldOut, HttpRequest
+from descanso.request_transformers import Body, Extra, Query, Skip, Url
+from tests.request_transformers.utills import consumed_fields
+
+
+def query_int(i: int) -> int:
+    return i + 1
+
+
+@pytest.fixture
+def fields_in():
+    return [FieldIn("i", int), FieldIn("s", str), FieldIn("a", Any)]
+
+
+@pytest.fixture
+def data_in():
+    return {"i": 1, "s": "hello", "a": "any"}
+
+
+@pytest.mark.parametrize(
+    ("transformer", "consumed", "body", "out"),
+    [
+        (
+            Body("i"),
+            ["i"],
+            1,
+            [FieldOut(None, FieldDestination.BODY, int)],
+        ),
+        (
+            Body("s"),
+            ["s"],
+            "hello",
+            [FieldOut(None, FieldDestination.BODY, str)],
+        ),
+    ],
+)
+def test_body(transformer, consumed, body, out, fields_in, data_in):
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == out
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(body=body)
+
+
+@pytest.mark.parametrize(
+    ("transformer", "consumed", "extras", "out"),
+    [
+        (
+            Extra("i"),
+            ["i"],
+            [("i", 1)],
+            [FieldOut("i", FieldDestination.EXTRA, int)],
+        ),
+        (
+            Extra("x", "stub"),
+            [],
+            [("x", "stub")],
+            [FieldOut("x", FieldDestination.EXTRA, str)],
+        ),
+        (
+            Extra("x", "{s}{i}"),
+            ["i", "s"],
+            [("x", "hello1")],
+            [FieldOut("x", FieldDestination.EXTRA, str)],
+        ),
+        (
+            Extra("y", query_int),
+            ["i"],
+            [("y", 2)],
+            [FieldOut("y", FieldDestination.EXTRA, int)],
+        ),
+    ],
+)
+def test_extra(transformer, consumed, extras, out, fields_in, data_in):
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == out
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(extras=extras)
+
+
+@pytest.mark.parametrize(
+    ("transformer", "consumed", "params", "out"),
+    [
+        (
+            Query("i"),
+            ["i"],
+            [("i", 1)],
+            [FieldOut("i", FieldDestination.QUERY, int)],
+        ),
+        (
+            Query("x", "stub"),
+            [],
+            [("x", "stub")],
+            [FieldOut("x", FieldDestination.QUERY, str)],
+        ),
+        (
+            Query("x", "{s}{i}"),
+            ["i", "s"],
+            [("x", "hello1")],
+            [FieldOut("x", FieldDestination.QUERY, str)],
+        ),
+        (
+            Query("y", query_int),
+            ["i"],
+            [("y", 2)],
+            [FieldOut("y", FieldDestination.QUERY, int)],
+        ),
+    ],
+)
+def test_query(transformer, consumed, params, out, fields_in, data_in):
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == out
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(query_params=params)
+
+
+@pytest.mark.parametrize(
+    ("transformer", "consumed", "out"),
+    [
+        (
+            Skip(),
+            [],
+            [],
+        ),
+        (
+            Skip("s"),
+            ["s"],
+            [],
+        ),
+    ],
+)
+def test_skip(transformer, consumed, out, fields_in, data_in):
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == out
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest()
+
+
+@pytest.mark.parametrize(
+    ("template", "url", "consumed"),
+    [
+        ("/", "/", []),
+        ("/{i}/{s}", "/1/hello", ["i", "s"]),
+        (lambda a: f"/{a}", "/any", ["a"]),
+    ],
+)
+def test_url(template, url, consumed, fields_in, data_in):
+    transformer = Url(template)
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == [FieldOut(None, FieldDestination.URL, str)]
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(url=url)

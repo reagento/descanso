@@ -8,7 +8,9 @@ async def query_xxy(request: web.Request) -> web.Response:
 
 async def conflict(request: web.Request) -> web.Response:
     return web.Response(
-        status=409, reason="test_conflict", body="test_conflict_body",
+        status=409,
+        reason="test_conflict",
+        body="test_conflict_body",
     )
 
 
