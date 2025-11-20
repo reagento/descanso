@@ -1,6 +1,5 @@
 import asyncio
 import concurrent.futures
-import time
 from threading import Thread
 
 import pytest
@@ -22,11 +21,8 @@ class MyRunner:
         site = await new_site(8080)
         await site.start()
         self.ready.set_result(True)
-        print("site started")
         await self.future
-        print("stopping site")
         await site.stop()
-        print("done arun")
 
     def run(self):
         asyncio.run(self.arun())
@@ -41,9 +37,6 @@ def server_addr():
     t = Thread(target=runner.run)
     t.start()
     runner.ready.result()
-    print("started")
     yield "http://127.0.0.1:8080"
-    print("stopping")
     runner.stop()
-    print("joining")
     t.join()

@@ -12,7 +12,7 @@ async def client(server_addr):
         yield AiohttpClient(server_addr, session)
 
 
-@pytest.mark.parametrize(["req", "expected_resp"], req_resp)
+@pytest.mark.parametrize(("req", "expected_resp"), req_resp())
 @pytest.mark.asyncio
 async def test_requests(client, req, expected_resp):
     async with client.asend_request(req) as resp:

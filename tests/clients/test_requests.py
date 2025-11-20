@@ -1,6 +1,6 @@
-import requests
 import pytest
 import pytest_asyncio
+import requests
 
 from descanso.http.requests import RequestsClient
 from .data import req_resp
@@ -12,7 +12,7 @@ def client(server_addr):
     yield RequestsClient(server_addr, session)
 
 
-@pytest.mark.parametrize(["req", "expected_resp"], req_resp)
+@pytest.mark.parametrize(("req", "expected_resp"), req_resp())
 def test_requests(client, req, expected_resp):
     with client.send_request(req) as resp:
         resp.load_body()

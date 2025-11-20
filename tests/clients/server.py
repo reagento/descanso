@@ -7,8 +7,9 @@ async def query_xxy(request: web.Request) -> web.Response:
 
 
 async def conflict(request: web.Request) -> web.Response:
-    return web.Response(status=409, reason="test_conflict",
-                        body="test_conflict_body")
+    return web.Response(
+        status=409, reason="test_conflict", body="test_conflict_body",
+    )
 
 
 async def headers(request: web.Request) -> web.Response:
@@ -46,14 +47,16 @@ async def form(request: web.Request) -> web.Response:
 
 def new_app() -> web.Application:
     app = web.Application()
-    app.add_routes([
-        web.get("/query_xxy", query_xxy),
-        web.get("/conflict", conflict),
-        web.get("/headers", headers),
-        web.delete("/delete", delete),
-        web.post("/files", files),
-        web.post("/form", form),
-    ])
+    app.add_routes(
+        [
+            web.get("/query_xxy", query_xxy),
+            web.get("/conflict", conflict),
+            web.get("/headers", headers),
+            web.delete("/delete", delete),
+            web.post("/files", files),
+            web.post("/form", form),
+        ],
+    )
     return app
 
 
@@ -61,5 +64,4 @@ async def new_site(port: int) -> web.TCPSite:
     app = new_app()
     app_runner = web.AppRunner(app)
     await app_runner.setup()
-    site = web.TCPSite(app_runner, "localhost", port)
-    return site
+    return web.TCPSite(app_runner, "localhost", port)
