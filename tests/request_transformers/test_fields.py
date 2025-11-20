@@ -251,3 +251,32 @@ def test_file(transformer, consumed, files, out, fields_in, data_in):
         data_in,
     )
     assert req == HttpRequest(files=files)
+
+
+def test_pipe(fields_in, data_in):
+    query_transformer = Query("i")
+    query_transformer2 = Query("s")
+    body_transformer = Body("i")
+    transformer = query_transformer | query_transformer2 | body_transformer
+    fields_out = transformer.transform_fields(fields_in)
+    assert fields_out == [
+        FieldOut("i", FieldDestination.QUERY, int),
+        FieldOut("s", FieldDestination.QUERY, str),
+        FieldOut(None, FieldDestination.BODY, int),
+    ]
+    assert consumed_fields(fields_in, query_transformer) == ["i"]
+    assert consumed_fields(fields_in, query_transformer2) == ["s"]
+    assert consumed_fields(fields_in, body_transformer) == ["i"]
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(
+        body=1,
+        query_params=[
+            ("i", 1),
+            ("s", "hello"),
+        ],
+    )
