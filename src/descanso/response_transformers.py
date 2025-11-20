@@ -87,7 +87,7 @@ class ErrorRaiser(BaseResponseTransformer):
         return response
 
     def __repr__(self):
-        return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({self.codes!r}, {self._need_body})"
 
 
 class KeepResponse(BaseResponseTransformer):

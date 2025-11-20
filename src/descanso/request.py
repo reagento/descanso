@@ -48,7 +48,7 @@ class FieldDestination(Enum):
 class FieldIn:
     name: str
     type_hint: Any
-    consumed_by: list["RequestTransformer"]
+    consumed_by: list["RequestTransformer"] = field(default_factory=list)
 
 
 @dataclass

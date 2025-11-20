@@ -8,7 +8,9 @@ async def query_xxy(request: web.Request) -> web.Response:
 
 async def conflict(request: web.Request) -> web.Response:
     return web.Response(
-        status=409, reason="test_conflict", body="test_conflict_body",
+        status=409,
+        reason="test_conflict",
+        body="test_conflict_body",
     )
 
 
@@ -45,6 +47,12 @@ async def form(request: web.Request) -> web.Response:
     return web.Response()
 
 
+async def json(request: web.Request) -> web.Response:
+    data = await request.json()
+    assert data == {"x": 1}
+    return web.json_response({"y": 2})
+
+
 def new_app() -> web.Application:
     app = web.Application()
     app.add_routes(
@@ -52,6 +60,7 @@ def new_app() -> web.Application:
             web.get("/query_xxy", query_xxy),
             web.get("/conflict", conflict),
             web.get("/headers", headers),
+            web.get("/json", json),
             web.delete("/delete", delete),
             web.post("/files", files),
             web.post("/form", form),
