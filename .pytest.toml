@@ -3,6 +3,7 @@ minversion = "9.0" # config in toml only since v9.0.0
 addopts = [
     "--cov=descanso",
     "--cov-append",
+    "--cov-config=.coveragerc",
     "--cov-report=term-missing",
     "--verbose",
 ]
