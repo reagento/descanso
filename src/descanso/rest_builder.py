@@ -251,7 +251,8 @@ class RestBuilder(Decorator):
     def __call__(
         self,
         func: Callable[
-            Concatenate[Any, _MethodParamSpec], Awaitable[_MethodResultT],
+            Concatenate[Any, _MethodParamSpec],
+            Awaitable[_MethodResultT],
         ],
     ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
 

@@ -18,7 +18,7 @@ KeyValueList: TypeAlias = list[KeyValue[T]]
 
 @dataclass
 class FileData:
-    contents: str | IO | None
+    contents: str | IO | None | bytes
     content_type: str | None = None
     filename: str | None = None
 
