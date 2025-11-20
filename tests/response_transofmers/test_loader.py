@@ -2,7 +2,26 @@ from typing import Any
 
 from descanso import Loader
 from descanso.response import HttpResponse
-from descanso.response_transformers import BodyModelLoad, JsonLoad
+from descanso.response_transformers import (
+    BodyModelLoad,
+    JsonLoad,
+    KeepResponse,
+)
+
+
+def test_keep_response():
+    json_load = KeepResponse(need_body=True)
+    response = HttpResponse(
+        status_code=200,
+        status_text="OK",
+        body='{"x": 1}',
+    )
+    response2 = json_load.transform_response(response, {})
+    assert response2 == HttpResponse(
+        status_code=200,
+        status_text="OK",
+        body=response,
+    )
 
 
 def test_json_load():
