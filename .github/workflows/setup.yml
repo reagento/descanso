@@ -49,6 +49,7 @@ jobs:
       run: |
         pytest
         mv .coverage .coverage.${{ matrix.python-version }}
+      working-directory: ./
 
     - name: Run spell check
       run: |
