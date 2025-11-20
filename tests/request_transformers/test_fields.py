@@ -230,7 +230,9 @@ def test_url(template, url, consumed, fields_in, data_in):
                 (
                     "file",
                     FileData(
-                        "hello", filename="a.b", content_type="text/plain",
+                        "hello",
+                        filename="a.b",
+                        content_type="text/plain",
                     ),
                 ),
             ],
