@@ -2,8 +2,14 @@ from typing import Any
 
 import pytest
 
-from descanso.request import FieldDestination, FieldIn, FieldOut, HttpRequest
-from descanso.request_transformers import Body, Extra, Query, Skip, Url
+from descanso.request import (
+    FieldDestination,
+    FieldIn,
+    FieldOut,
+    FileData,
+    HttpRequest,
+)
+from descanso.request_transformers import Body, Extra, File, Query, Skip, Url
 from tests.request_transformers.utills import consumed_fields
 
 
@@ -24,6 +30,12 @@ def data_in():
 @pytest.mark.parametrize(
     ("transformer", "consumed", "body", "out"),
     [
+        (
+            Body("unknown"),
+            [],
+            None,
+            [],
+        ),
         (
             Body("i"),
             ["i"],
@@ -183,3 +195,57 @@ def test_url(template, url, consumed, fields_in, data_in):
         data_in,
     )
     assert req == HttpRequest(url=url)
+
+
+@pytest.mark.parametrize(
+    ("transformer", "consumed", "files", "out"),
+    [
+        (
+            File("s"),
+            ["s"],
+            [("s", FileData("hello", filename=None, content_type=None))],
+            [FieldOut("s", FieldDestination.FILE, str)],
+        ),
+        (
+            File("s", filefield="file"),
+            ["s"],
+            [("file", FileData("hello", filename=None, content_type=None))],
+            [FieldOut("file", FieldDestination.FILE, str)],
+        ),
+        (
+            File("s", filefield="file", filename="a.b"),
+            ["s"],
+            [("file", FileData("hello", filename="a.b", content_type=None))],
+            [FieldOut("file", FieldDestination.FILE, str)],
+        ),
+        (
+            File(
+                "s",
+                filefield="file",
+                filename="a.b",
+                content_type="text/plain",
+            ),
+            ["s"],
+            [
+                (
+                    "file",
+                    FileData(
+                        "hello", filename="a.b", content_type="text/plain",
+                    ),
+                ),
+            ],
+            [FieldOut("file", FieldDestination.FILE, str)],
+        ),
+    ],
+)
+def test_file(transformer, consumed, files, out, fields_in, data_in):
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == out
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(files=files)

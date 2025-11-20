@@ -183,11 +183,6 @@ class File(BaseRequestTransformer):
         self.filefield = filefield or arg
         self.filename = filename
         self.content_type = content_type
-        self.field_out = FieldOut(
-            name=self.filefield,
-            dest=FieldDestination.FILE,
-            type_hint=Any,
-        )
 
     def transform_fields(
         self,
@@ -196,7 +191,14 @@ class File(BaseRequestTransformer):
         for field in fields:
             if field.name == self.arg:
                 field.consumed_by.append(self)
-        return [self.field_out]
+                return [
+                    FieldOut(
+                        name=self.filefield,
+                        dest=FieldDestination.FILE,
+                        type_hint=field.type_hint,
+                    ),
+                ]
+        return []
 
     def transform_request(
         self,
@@ -255,6 +257,8 @@ class Body(BaseRequestTransformer):
         fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
+        if self.arg not in data:
+            return request
         request.body = data[self.arg]
         return request
 
