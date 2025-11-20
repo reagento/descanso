@@ -138,7 +138,7 @@ class Url(BaseRequestTransformer):
             dest=FieldDestination.URL,
             type_hint=str,
         )
-        self._original_template = template
+        self.original_template = template
         if isinstance(template, str):
             self.template = template.format
             self.args = get_params_from_string(template)
@@ -168,7 +168,7 @@ class Url(BaseRequestTransformer):
         return request
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self._original_template!r})"
+        return f"{self.__class__.__name__}({self.original_template!r})"
 
 
 class File(BaseRequestTransformer):
@@ -369,6 +369,9 @@ class Skip(BaseRequestTransformer):
             if field.name == self.arg:
                 field.consumed_by.append(self)
         return []
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.arg!r})"
 
 
 class DelimiterQuery(BaseRequestTransformer):
