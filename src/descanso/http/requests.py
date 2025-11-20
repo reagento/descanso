@@ -17,7 +17,7 @@ class RequestsResponseWrapper(SyncResponseWrapper):
         self.status_code = response.status_code
         self.status_text = response.reason
         self.body = None
-        self.headers = response.headers
+        self.headers = list(response.headers.items())
         self._raw_response = response
 
     def load_body(self) -> None:

@@ -17,7 +17,7 @@ class AiohttpResponseWrapper(AsyncResponseWrapper):
         self.status_code = response.status
         self.status_text = response.reason
         self.body = None
-        self.headers = response.headers
+        self.headers = list(response.headers.items())
         self._raw_response = response
 
     async def aload_body(self) -> None:
@@ -56,7 +56,7 @@ class AiohttpClient(AsyncClient):
         async with self._session.request(
             method=request.method,
             url=urllib.parse.urljoin(self._base_url, request.url),
-            headers=dict(request.headers),
+            headers=request.headers,
             data=data,
             params=[(k, v) for k, v in request.query_params if v is not None],
         ) as resp:

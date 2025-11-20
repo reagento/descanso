@@ -4,46 +4,34 @@ from typing import Any
 
 from .client import Loader
 from .exceptions import ClientError, ServerError
-from .response import HttpResponse, ResponseTransformer
+from .response import BaseResponseTransformer, HttpResponse
 
 
-class BodyModelLoad(ResponseTransformer):
+class BodyModelLoad(BaseResponseTransformer):
     def __init__(
         self,
         type_hint: Any,
         loader: Loader | None,
-        codes: Sequence[int] = (200,),
     ) -> None:
         self.type_hint = type_hint
-        self.codes = codes
         self.loader = loader
-
-    def need_response_body(self, response: HttpResponse) -> bool:
-        return response.status_code in self.codes
 
     def transform_response(
         self,
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        if response.status_code not in self.codes:
-            return response
         response.body = self.loader.load(response.body, self.type_hint)
         return response
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}"
-            f"("
-            f"{self.type_hint!r}, "
-            f"codes={self.codes!r}, "
-            f"loader={self.loader!r}"
-            f")"
+            f"{self.__class__.__name__}({self.type_hint!r}, {self.loader!r})"
         )
 
 
-class JsonLoad(ResponseTransformer):
-    def __init__(self, codes: Sequence[int] = (200,)):
+class JsonLoad(BaseResponseTransformer):
+    def __init__(self, codes: Sequence[int] = (200, 201, 202)):
         self.codes = codes
 
     def need_response_body(self, response: HttpResponse) -> bool:
@@ -63,7 +51,7 @@ class JsonLoad(ResponseTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class ErrorRaiser(ResponseTransformer):
+class ErrorRaiser(BaseResponseTransformer):
     def __init__(
         self,
         *,
@@ -113,7 +101,7 @@ class ErrorRaiser(ResponseTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class KeepResponse(ResponseTransformer):
+class KeepResponse(BaseResponseTransformer):
     def __init__(self, *, need_body: bool):
         self._need_body = need_body
 

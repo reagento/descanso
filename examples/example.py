@@ -8,7 +8,7 @@ from requests import Session
 
 from descanso.http.requests import RequestsClient
 from descanso.request_transformers import File
-from descanso.rest_builder import RestBuilder
+from descanso import RestBuilder
 
 
 @dataclass

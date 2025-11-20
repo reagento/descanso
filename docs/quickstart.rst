@@ -1,3 +1,6 @@
+.. _quickstart:
+
+
 Quickstart
 ====================================
 
@@ -32,8 +35,8 @@ You need to have ``descanso.Loader`` and ``descanso.Dumper`` implementations. Or
 
 .. code-block:: python
 
+    from adaptix import Retort
     from descanso import RestBuilder
-
 
     rest = RestBuilder(
         request_body_dumper=Retort(),
@@ -46,8 +49,6 @@ You need to have ``descanso.Loader`` and ``descanso.Dumper`` implementations. Or
 
 .. code-block:: python
 
-    from adaptix import Retort
-    from requests import Session
     from descanso.http.requests import RequestsClient
 
     class RealClient(RequestsClient):
@@ -65,9 +66,6 @@ To customize this behavior refer :ref:`configuration`
 
 .. code-block:: python
 
-    from typing import Optional, List
-    from adaptix import Retort
-    from requests import Session
     from descanso.http.requests import RequestsClient
 
     class RealClient(RequestsClient):
@@ -76,7 +74,7 @@ To customize this behavior refer :ref:`configuration`
             pass
 
         @rest.get("todos")
-        def list_todos(self, user_id: Optional[int]) -> List[Todo]:
+        def list_todos(self, user_id: int | None) -> list[Todo]:
             pass
 
         @rest.delete("todos/{id}")
@@ -90,6 +88,8 @@ To customize this behavior refer :ref:`configuration`
 7. **Create client instance and use it.**
 
 .. code-block:: python
+
+    from requests import Session
 
     client = RealClient(
         base_url="https://example.com/api",

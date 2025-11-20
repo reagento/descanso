@@ -1,3 +1,5 @@
+.. _authorization:
+
 Authorization
 ===========================
 
@@ -20,7 +22,7 @@ Note, that we are not using f-strings here, format string will be evaluated late
             )
             self.token = token
 
-**Dynamic auth data**. You need to redefine ``send_request`` or ``asend_request`` and implement token retrival logic there.
+**Dynamic auth data**. You need to redefine ``send_request`` or ``asend_request`` and implement token retrieval logic there.
 
 .. code-block:: python
 
