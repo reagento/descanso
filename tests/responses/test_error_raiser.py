@@ -1,8 +1,8 @@
 import pytest
+from descanso.response_transofrmers import ErrorRaiser
 
 from descanso.exceptions import ClientError, ServerError
 from descanso.response import HttpResponse
-from descanso.response_transofrmers import ErrorRaiser
 
 
 def assert_client_error(
