@@ -71,9 +71,7 @@ class ErrorRaiser(BaseResponseTransformer):
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        if (
-            not self.codes and response.status_code >= 400  # noqa: PLR2004
-        ) or not self._is_status_code_allowed(response.status_code):
+        if not self._is_status_code_allowed(response.status_code):
             if response.status_code >= 500:  # noqa: PLR2004
                 raise ServerError(
                     status_code=response.status_code,
@@ -93,6 +91,9 @@ class ErrorRaiser(BaseResponseTransformer):
             return False
 
         if self.codes and code in self.codes:
+            return False
+
+        if not self.codes and not self.except_codes and code >= 400:  # noqa: PLR2004
             return False
 
         return True

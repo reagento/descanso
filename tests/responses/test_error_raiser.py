@@ -48,10 +48,19 @@ def test_server_error() -> None:
     assert exc.status_text == response.status_text
 
 
-def test_codes() -> None:
-    error_raiser = ErrorRaiser(codes=[201], except_codes=None)
-    good_response = HttpResponse(status_code=200, status_text="ok")
-    bad_response = HttpResponse(status_code=201, status_text="created")
+@pytest.mark.parametrize(
+    ("code", "good_status_code"),
+    [
+        (201, 200),
+        (200, 404),
+    ],
+)
+def test_codes(code: int, good_status_code: int) -> None:
+    error_raiser = ErrorRaiser(codes=[code], except_codes=None)
+    good_response = HttpResponse(
+        status_code=good_status_code, status_text="ok",
+    )
+    bad_response = HttpResponse(status_code=code, status_text="created")
 
     transformed_good_response = error_raiser.transform_response(
         good_response,
@@ -62,10 +71,17 @@ def test_codes() -> None:
     assert transformed_good_response == good_response
 
 
-def test_except_codes() -> None:
-    error_raiser = ErrorRaiser(except_codes=[201])
-    good_response = HttpResponse(status_code=201, status_text="created")
-    bad_response = HttpResponse(status_code=200, status_text="ok")
+@pytest.mark.parametrize(
+    ("except_code", "bad_status_code"),
+    [(201, 200), (404, 201)],
+)
+def test_except_codes(except_code: int, bad_status_code: int) -> None:
+    error_raiser = ErrorRaiser(except_codes=[except_code])
+    good_response = HttpResponse(
+        status_code=except_code,
+        status_text="created",
+    )
+    bad_response = HttpResponse(status_code=bad_status_code, status_text="ok")
 
     transformed_good_response = error_raiser.transform_response(
         good_response,
