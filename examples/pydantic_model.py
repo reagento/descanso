@@ -1,14 +1,15 @@
 import logging
-from typing import Optional, List
 
-from pydantic import BaseModel, TypeAdapter, ConfigDict
+from pydantic import BaseModel, ConfigDict, TypeAdapter
+from requests import Session
 
-from dataclass_rest import get, post, delete
-from dataclass_rest.client_protocol import FactoryProtocol
-from dataclass_rest.http.requests import RequestsClient
+from descanso import delete, get, post
+from descanso.client import Dumper, Loader
+from descanso.http.requests import RequestsClient
+from descanso.rest_builder import RestBuilder
 
 
-class PydanticFactory:
+class PydanticAdapter(Loader, Dumper):
     def load(self, data, type_):
         return TypeAdapter(type_).validate_python(data)
 
@@ -17,8 +18,8 @@ class PydanticFactory:
 
 
 def to_camel(string: str) -> str:
-    words = string.split('_')
-    return words[0] + ''.join(word.capitalize() for word in words[1:])
+    words = string.split("_")
+    return words[0] + "".join(word.capitalize() for word in words[1:])
 
 
 class Todo(BaseModel):
@@ -32,35 +33,40 @@ class Todo(BaseModel):
         populate_by_name=True,
     )
 
+adapter = PydanticAdapter()
+rest = RestBuilder(
+    request_body_dumper=adapter,
+    response_body_loader=adapter,
+    query_param_dumper=adapter,
+)
+
 
 class RealClient(RequestsClient):
     def __init__(self):
         super().__init__(
             base_url="https://jsonplaceholder.typicode.com/",
+            session=Session(),
         )
 
-    def _init_request_body_factory(self) -> FactoryProtocol:
-        return PydanticFactory()
-
-    @get("todos/{id}")
+    @rest.get("todos/{id}")
     def get_todo(self, id: str) -> Todo:
-        pass
+        """GET method with path param"""
 
-    @get("todos")
-    def list_todos(self, user_id: Optional[int]) -> List[Todo]:
-        pass
+    @rest.get("todos")
+    def list_todos(self, user_id: int | None) -> list[Todo]:
+        """GET method with query params"""
 
-    @delete("todos/{id}")
+    @rest.delete("todos/{id}")
     def delete_todo(self, id: int):
-        pass
+        """DELETE method"""
 
-    @post("todos")
+    @rest.post("todos")
     def create_todo(self, body: Todo) -> Todo:
-        """Create Todo"""
+        """POST method"""
 
-    @get("https://httpbin.org/get")
+    @rest.get("https://httpbin.org/get")
     def get_httpbin(self):
-        """Request with different base_url"""
+        """Url different from base_url"""
 
 
 logging.basicConfig(level=logging.INFO)

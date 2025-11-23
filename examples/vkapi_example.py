@@ -2,13 +2,14 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, TypeVar, Generic
+from typing import Generic, TypeVar
 
-from adaptix import Retort, dumper, Chain
+from adaptix import Chain, Retort, dumper
 from requests import Session
 
-from dataclass_rest import get
-from dataclass_rest.http.requests import RequestsClient
+from descanso.http.requests import RequestsClient
+from descanso.request_transformers import Query, DelimiterQuery
+from descanso.rest_builder import RestBuilder
 
 T = TypeVar("T")
 
@@ -34,40 +35,48 @@ class GenderQuery(Enum):
 @dataclass
 class UsersSearchResult:
     count: int
-    items: List[User]
+    items: list[User]
 
+retort = Retort()
+query_dumper = Retort(recipe=[
+    dumper(bool, int),
+    dumper(int, str),
+    dumper(list[int], lambda d: ",".join(d), Chain.LAST),
+    dumper(list[str], lambda d: ",".join(d), Chain.LAST),
+])
+rest = RestBuilder(
+    Query("v", "5.131"),
+    request_body_dumper=retort,
+    response_body_loader=retort,
+    query_param_dumper=retort,
+    query_param_post_dump=DelimiterQuery(),
+)
 
 class VkClient(RequestsClient):
     def __init__(self, token: str):
-        session = Session()
-        session.params = {"access_token": token, "v": "5.131"}
+        self.token = token
         super(VkClient, self).__init__(
             base_url="https://api.vk.com/method/",
-            session=session,
+            session=Session(),
+            transformers=[
+                Query("access_token", "{self.token}")
+            ]
         )
 
     def set_token(self, token: str) -> None:
-        self.session.query_params["access_token"] = token
+        self.token = token
 
-    def _init_request_args_factory(self) -> Retort:
-        return Retort(recipe=[
-            dumper(bool, int),
-            dumper(int, str),
-            dumper(List[int], lambda d: ",".join(d), Chain.LAST),
-            dumper(List[str], lambda d: ",".join(d), Chain.LAST),
-        ])
+    @rest.get("users.get")
+    def get_users(self, user_ids: list[str]) -> Response[list[User]]:
+        """Get users by their ids"""
 
-    @get("users.get")
-    def get_users(self, user_ids: List[str]) -> Response[List[User]]:
-        pass
-
-    @get("users.search")
+    @rest.get("users.search")
     def search_users(
             self, q: str, sort: bool = False,
             offset: int = 0, count: int = 20,
             gender: GenderQuery = GenderQuery.ANY,
     ) -> Response[UsersSearchResult]:
-        pass
+        """Search users with pagination"""
 
 
 TOKEN = os.getenv("VK_TOKEN")
@@ -80,5 +89,5 @@ def main():
     print(client.search_users(q="tishka17", gender=GenderQuery.MALE))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,0 +1,15 @@
+# project generated files
+__pycache__/
+*.egg-info
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+/docs-build
+/dist
+/build
+
+# well known common utilities
+.idea/
+.vscode/
+.DS_Store
