@@ -30,6 +30,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    'kiss-headers',
+]
 
 [project.urls]
 "Source" = "https://github.com/reagento/descanso"
