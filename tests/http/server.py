@@ -16,7 +16,11 @@ async def conflict(request: web.Request) -> web.Response:
 
 async def headers(request: web.Request) -> web.Response:
     assert request.headers["X-Test"] == "1"
-    return web.Response(headers=[("X-Test", "2"), ("X-Test", "3")])
+    return web.Response(headers=[
+        ("X-Test", "2"),
+        ("X-Test", "3"),
+        ("Another", "value"),
+    ])
 
 
 async def delete(request: web.Request) -> web.Response:

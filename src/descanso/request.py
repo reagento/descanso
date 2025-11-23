@@ -11,6 +11,8 @@ from typing import (
     runtime_checkable,
 )
 
+from kiss_headers import Headers
+
 T = TypeVar("T")
 KeyValue: TypeAlias = tuple[str, T]
 KeyValueList: TypeAlias = list[KeyValue[T]]
@@ -28,7 +30,7 @@ class HttpRequest:
     body: Any = None
     files: KeyValueList[FileData] = field(default_factory=list)
     query_params: KeyValueList[Any] = field(default_factory=list)
-    headers: KeyValueList[str | bytes] = field(default_factory=list)
+    headers: Headers = field(default_factory=Headers)
     extras: KeyValueList[Any] = field(default_factory=list)
     url: str = ""
     method: str = "GET"

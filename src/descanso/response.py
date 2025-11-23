@@ -2,6 +2,8 @@ from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+from kiss_headers import Headers
+
 from .request import KeyValueList
 
 
@@ -10,7 +12,7 @@ class HttpResponse:
     status_code: int
     status_text: str
     url: str = ""
-    headers: KeyValueList[str | bytes] = field(default_factory=list)
+    headers: Headers = field(default_factory=Headers)
     body: Any = None
 
 

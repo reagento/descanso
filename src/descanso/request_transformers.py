@@ -327,7 +327,7 @@ class JsonDump(BaseRequestTransformer):
         data: dict[str, Any],
     ) -> HttpRequest:
         request.body = json.dumps(request.body)
-        request.headers.append(("Content-Type", "application/json"))
+        request.headers["Content-Type"] = "application/json"
         return request
 
     def __repr__(self):

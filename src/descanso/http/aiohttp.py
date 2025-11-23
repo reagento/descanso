@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 
 from aiohttp import ClientResponse, ClientSession, FormData
+from kiss_headers import parse_it
 
 from descanso.client import (
     AsyncClient,
@@ -17,7 +18,7 @@ class AiohttpResponseWrapper(AsyncResponseWrapper):
         self.status_code = response.status
         self.status_text = response.reason
         self.body = None
-        self.headers = list(response.headers.items())
+        self.headers = parse_it(response.headers)
         self._raw_response = response
 
     async def aload_body(self) -> None:
