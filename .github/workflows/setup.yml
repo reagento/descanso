@@ -48,7 +48,7 @@ jobs:
     - name: Run tests
       run: |
         coverage run --data-file=.coverage.${{ matrix.python-version }} -m pytest
-        coverage report --data-file=.coverage.${{ matrix.python-version }} -m
+        coverage report --data-file=.coverage.${{ matrix.python-version }}
 
     - name: Run spell check
       run: |

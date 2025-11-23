@@ -1,6 +1,8 @@
 [report]
+show_missing = True
 exclude_lines = 
     pragma: not covered
     @overload
 [run]
 relative_files = true
+source = src/
