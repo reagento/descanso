@@ -56,10 +56,12 @@ class ErrorRaiser(BaseResponseTransformer):
         self,
         *,
         codes: Sequence[int] | None = None,
+        except_codes: Sequence[int] | None = None,
         need_body: bool = False,
     ) -> None:
         self._need_body = need_body
         self.codes = codes
+        self.except_codes = except_codes
 
     def need_response_body(self, response: HttpResponse) -> bool:
         return self._need_body
@@ -69,9 +71,7 @@ class ErrorRaiser(BaseResponseTransformer):
         response: HttpResponse,
         fields: dict[str, Any],
     ) -> HttpResponse:
-        if (
-            self.codes is None and response.status_code >= 400  # noqa: PLR2004
-        ) or (self.codes is not None and response.status_code in self.codes):
+        if not self._is_status_code_allowed(response.status_code):
             if response.status_code >= 500:  # noqa: PLR2004
                 raise ServerError(
                     status_code=response.status_code,
@@ -85,6 +85,18 @@ class ErrorRaiser(BaseResponseTransformer):
                 body=response.body,
             )
         return response
+
+    def _is_status_code_allowed(self, code: int) -> bool:
+        if self.except_codes and code not in self.except_codes:
+            return False
+
+        if self.codes and code in self.codes:
+            return False
+
+        if not self.codes and not self.except_codes and code >= 400:  # noqa: PLR2004
+            return False
+
+        return True
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.codes!r}, {self._need_body})"
