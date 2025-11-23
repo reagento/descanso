@@ -399,6 +399,8 @@ class DelimiterQuery(BaseRequestTransformer):
         data: dict[str, Any],
     ) -> HttpRequest:
         for i, (name, value) in enumerate(request.query_params):
+            if value is None:
+                continue
             if isinstance(value, list):
                 request.query_params[i] = (
                     name,
@@ -411,6 +413,7 @@ class DelimiterQuery(BaseRequestTransformer):
                         itertools.chain.from_iterable(
                             (key, str(single_value))
                             for key, single_value in value.items()
+                            if single_value is not None
                         ),
                     ),
                 )
@@ -430,16 +433,23 @@ class DeepObjectQuery(BaseRequestTransformer):
     ) -> HttpRequest:
         new_params = []
         for name, value in request.query_params:
-            if isinstance(value, list):
-                for single_value in value:
-                    new_params.append((f"{name}[]", str(single_value)))
-            elif isinstance(value, dict):
-                for key, single_value in value.items():
-                    new_params.append((f"{name}[{key}]", str(single_value)))
-            else:
-                new_params.append((name, str(value)))
+            new_params.extend(self._dump(name, value))
         request.query_params = new_params
         return request
+
+    def _dump(self, name: str, value: Any) -> Iterator[KeyValue[str]]:
+        if value is None:
+            return
+        if isinstance(value, list):
+            for single_value in value:
+                yield f"{name}[]", str(single_value)
+        elif isinstance(value, dict):
+            for key, single_value in value.items():
+                if single_value is None:
+                    continue
+                yield f"{name}[{key}]", str(single_value)
+        else:
+            yield name, str(value)
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
@@ -460,7 +470,9 @@ class PhpStyleQuery(BaseRequestTransformer):
         return request
 
     def _dump(self, prefix: str, data: Any) -> Iterator[KeyValue[str]]:
-        if isinstance(data, list):
+        if data is None:
+            return
+        elif isinstance(data, list):
             for i, value in enumerate(data):
                 yield from self._dump(prefix + f"[{i}]", value)
         elif isinstance(data, dict):
@@ -483,18 +495,23 @@ class FormQuery(BaseRequestTransformer):
     ) -> HttpRequest:
         new_params = []
         for name, value in request.query_params:
-            if value is None:
-                continue
-            if isinstance(value, list):
-                for single_value in value:
-                    new_params.append((f"{name}", str(single_value)))
-            elif isinstance(value, dict):
-                for key, single_value in value.items():
-                    new_params.append((f"{key}", str(single_value)))
-            else:
-                new_params.append((name, str(value)))
+            new_params.extend(self._dump(name, value))
         request.query_params = new_params
         return request
+
+    def _dump(self, name: str, value: Any) -> Iterator[KeyValue[str]]:
+        if value is None:
+            return
+        if isinstance(value, list):
+            for single_value in value:
+                yield f"{name}", str(single_value)
+        elif isinstance(value, dict):
+            for key, single_value in value.items():
+                if single_value is None:
+                    continue
+                yield f"{key}", str(single_value)
+        else:
+            yield name, str(value)
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
