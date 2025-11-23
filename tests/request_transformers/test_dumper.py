@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+from kiss_headers import Header, Headers
 
 from descanso import Dumper
 from descanso.request import (
@@ -110,5 +111,5 @@ def test_body_json_dump(fields_in, fields_out):
     )
     assert request == HttpRequest(
         body='{"x": "value"}',
-        headers=[("Content-Type", "application/json")],
+        headers=Headers(Header("Content-Type", "application/json")),
     )

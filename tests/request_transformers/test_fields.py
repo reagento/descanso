@@ -1,6 +1,8 @@
 from typing import Any
 
 import pytest
+from kiss_headers import Header as KissHeader
+from kiss_headers import Headers
 
 from descanso.request import (
     FieldDestination,
@@ -9,7 +11,15 @@ from descanso.request import (
     FileData,
     HttpRequest,
 )
-from descanso.request_transformers import Body, Extra, File, Query, Skip, Url
+from descanso.request_transformers import (
+    Body,
+    Extra,
+    File,
+    Header,
+    Query,
+    Skip,
+    Url,
+)
 from tests.request_transformers.utills import consumed_fields
 
 
@@ -103,6 +113,48 @@ def test_extra(transformer, consumed, extras, out, fields_in, data_in):
         data_in,
     )
     assert req == HttpRequest(extras=extras)
+
+
+@pytest.mark.parametrize(
+    ("transformer", "consumed", "headers", "out"),
+    [
+        (
+            Header("i"),
+            ["i"],
+            Headers(KissHeader("i", "1")),
+            [FieldOut("i", FieldDestination.HEADER, int)],
+        ),
+        (
+            Header("x", "stub"),
+            [],
+            Headers(KissHeader("x", "stub")),
+            [FieldOut("x", FieldDestination.HEADER, str)],
+        ),
+        (
+            Header("x", "{s}{i}"),
+            ["i", "s"],
+            Headers(KissHeader("x", "hello1")),
+            [FieldOut("x", FieldDestination.HEADER, str)],
+        ),
+        (
+            Header("y", query_int),
+            ["i"],
+            Headers(KissHeader("y", "2")),
+            [FieldOut("y", FieldDestination.HEADER, int)],
+        ),
+    ],
+)
+def test_header(transformer, consumed, headers, out, fields_in, data_in):
+    fields_out = transformer.transform_fields(fields_in)
+    assert consumed_fields(fields_in, transformer) == consumed
+    assert fields_out == out
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(headers=headers)
 
 
 @pytest.mark.parametrize(

@@ -14,7 +14,7 @@ async def client(server_addr):
 
 @pytest.mark.parametrize(("req", "expected_resp"), req_resp())
 @pytest.mark.asyncio
-async def test_requests(client, req, expected_resp):
+async def test_aiohttp(client, req, expected_resp):
     async with client.asend_request(req) as resp:
         await resp.aload_body()
         assert resp == expected_resp

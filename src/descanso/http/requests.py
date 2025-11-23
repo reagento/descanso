@@ -2,6 +2,7 @@ import urllib.parse
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 
+from kiss_headers import parse_it
 from requests import Response, Session
 
 from descanso.client import (
@@ -17,7 +18,7 @@ class RequestsResponseWrapper(SyncResponseWrapper):
         self.status_code = response.status_code
         self.status_text = response.reason
         self.body = None
-        self.headers = list(response.headers.items())
+        self.headers = parse_it(response.headers)
         self._raw_response = response
 
     def load_body(self) -> None:
@@ -46,7 +47,7 @@ class RequestsClient(SyncClient):
         resp = self._session.request(
             method=request.method,
             url=urllib.parse.urljoin(self._base_url, request.url),
-            headers=dict(request.headers),
+            headers=request.headers,
             data=request.body,
             params=params,
             files=[
