@@ -112,6 +112,19 @@ class Header(DestTransformer):
             dest=FieldDestination.HEADER,
         )
 
+    def transform_request(
+        self,
+        request: HttpRequest,
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
+        data: dict[str, Any],
+    ) -> HttpRequest:
+        data = self.template(
+            **{k: v for k, v in data.items() if k in self.args},
+        )
+        request.headers[self.name_out] = str(data)
+        return request
+
 
 class Extra(DestTransformer):
     def __init__(self, header: str, template: DataTemplate = None):
