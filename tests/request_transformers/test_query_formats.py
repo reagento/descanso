@@ -50,7 +50,7 @@ def test_dict(transformer, expected_params, fields_in):
     assert consumed_fields(fields_in, transformer) == []
     request = HttpRequest(
         query_params=[
-            ("x", {"a": 1, "b": 2}),
+            ("x", {"a": 1, "b": 2, "c": None}),
         ],
     )
     request = transformer.transform_request(request, fields_in, [], {"x": 1})
@@ -71,6 +71,7 @@ def test_nested_php_style(fields_in):
                         {"a": 2, "b": 3},
                         {"a": 4, "b": 5},
                     ],
+                    "c": None,
                 },
             ),
         ],
