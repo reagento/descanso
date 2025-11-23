@@ -138,7 +138,7 @@ class Url(BaseRequestTransformer):
             dest=FieldDestination.URL,
             type_hint=str,
         )
-        self._original_template = template
+        self.original_template = template
         if isinstance(template, str):
             self.template = template.format
             self.args = get_params_from_string(template)
@@ -168,7 +168,7 @@ class Url(BaseRequestTransformer):
         return request
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self._original_template!r})"
+        return f"{self.__class__.__name__}({self.original_template!r})"
 
 
 class File(BaseRequestTransformer):
@@ -183,11 +183,6 @@ class File(BaseRequestTransformer):
         self.filefield = filefield or arg
         self.filename = filename
         self.content_type = content_type
-        self.field_out = FieldOut(
-            name=self.filefield,
-            dest=FieldDestination.FILE,
-            type_hint=Any,
-        )
 
     def transform_fields(
         self,
@@ -196,7 +191,14 @@ class File(BaseRequestTransformer):
         for field in fields:
             if field.name == self.arg:
                 field.consumed_by.append(self)
-        return [self.field_out]
+                return [
+                    FieldOut(
+                        name=self.filefield,
+                        dest=FieldDestination.FILE,
+                        type_hint=field.type_hint,
+                    ),
+                ]
+        return []
 
     def transform_request(
         self,
@@ -255,6 +257,8 @@ class Body(BaseRequestTransformer):
         fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
+        if self.arg not in data:
+            return request
         request.body = data[self.arg]
         return request
 
@@ -366,6 +370,9 @@ class Skip(BaseRequestTransformer):
                 field.consumed_by.append(self)
         return []
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.arg!r})"
+
 
 class DelimiterQuery(BaseRequestTransformer):
     def __init__(self, separator: str = ",") -> None:
@@ -412,12 +419,12 @@ class DeepObjectQuery(BaseRequestTransformer):
         for name, value in request.query_params:
             if isinstance(value, list):
                 for single_value in value:
-                    new_params.append((f"{name}[]", single_value))
+                    new_params.append((f"{name}[]", str(single_value)))
             elif isinstance(value, dict):
                 for key, single_value in value.items():
-                    new_params.append((f"{name}[{key}]", single_value))
+                    new_params.append((f"{name}[{key}]", str(single_value)))
             else:
-                new_params.append((name, value))
+                new_params.append((name, str(value)))
         request.query_params = new_params
         return request
 
@@ -447,7 +454,7 @@ class PhpStyleQuery(BaseRequestTransformer):
             for key, value in data.items():
                 yield from self._dump(prefix + f"[{key}]", value)
         else:
-            yield prefix, data
+            yield prefix, str(data)
 
     def __repr__(self):
         return f"{self.__class__.__name__}()"
@@ -467,12 +474,12 @@ class FormQuery(BaseRequestTransformer):
                 continue
             if isinstance(value, list):
                 for single_value in value:
-                    new_params.append((f"{name}", single_value))
+                    new_params.append((f"{name}", str(single_value)))
             elif isinstance(value, dict):
                 for key, single_value in value.items():
-                    new_params.append((f"{key}", single_value))
+                    new_params.append((f"{key}", str(single_value)))
             else:
-                new_params.append((name, value))
+                new_params.append((name, str(value)))
         request.query_params = new_params
         return request
 
