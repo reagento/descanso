@@ -4,8 +4,6 @@ from typing import Any, Protocol, runtime_checkable
 
 from kiss_headers import Headers
 
-from .request import KeyValueList
-
 
 @dataclass
 class HttpResponse:
