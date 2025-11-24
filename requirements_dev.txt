@@ -2,6 +2,7 @@ adaptix
 aiohttp
 requests
 requests-mock
+httpx
 pytest~=9.0.1
 pytest-asyncio==1.3.*
 pytest-repeat==0.9.*
