@@ -80,14 +80,14 @@ class BaseHttpxClient(BaseClient, Generic[_HttpxClientT]):
         self: Self,
         params: KeyValueList[Any],
     ) -> QueryParams:
-        httpx_params = QueryParams()
+        httpx_params = []
 
         for key, value in params:
             if value is None:
                 continue
-            httpx_params.add(key, value)
+            httpx_params.append((key, value))
 
-        return httpx_params
+        return QueryParams(httpx_params)
 
     def _to_httpx_files(
         self: Self,
