@@ -23,6 +23,12 @@ class MethodBinder(Generic[_MethodParamSpec, _MethodResultT]):
     ) -> None:
         self._spec = spec
 
+    @property
+    def spec(
+        self,
+    ) -> MethodSpec[Concatenate[Any, _MethodParamSpec], _MethodResultT]:
+        return self._spec
+
     @overload
     def __get__(
         self,
@@ -50,7 +56,7 @@ class MethodBinder(Generic[_MethodParamSpec, _MethodResultT]):
         owner: Any = None,
     ) -> Any:
         if instance is None:
-            return self._spec
+            return self
         elif isinstance(instance, SyncClient):
             return BoundSyncMethod(self._spec, instance)
         elif isinstance(instance, AsyncClient):
