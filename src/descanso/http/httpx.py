@@ -27,6 +27,7 @@ from descanso.request import (
     RequestTransformer,
 )
 from descanso.response import ResponseTransformer
+from descanso.utils import ensure_trailing_slash
 
 _FileName = str | None
 _FileContent = IO[bytes] | bytes | str
@@ -52,12 +53,6 @@ class HttpxResponseWrapper(SyncResponseWrapper, AsyncResponseWrapper):
 
     async def aload_body(self) -> None:
         self.body = self._raw_response.content
-
-
-def ensure_trailing_slash(url: str) -> str:
-    if url.endswith("/"):
-        return url
-    return url + "/"
 
 
 def to_httpx_query_params(params: KeyValueList[Any]) -> QueryParams:
