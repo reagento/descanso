@@ -44,6 +44,7 @@ class JsonLoad(BaseResponseTransformer):
     ) -> HttpResponse:
         if response.status_code not in self.codes:
             return response
+
         response.body = json.loads(response.body)
         return response
 

@@ -3,7 +3,6 @@ from typing import (
     Any,
     Concatenate,
     ParamSpec,
-    Protocol,
     TypedDict,
     TypeVar,
     overload,
@@ -16,6 +15,12 @@ except ImportError:
     Unpack = Any | T
 
 from descanso import Dumper, Loader
+from descanso.builder_base import (
+    Decorator,
+    Transformer,
+    UrlSrc,
+    url_transformer,
+)
 from descanso.method_descriptor import MethodBinder
 from descanso.method_spec import MethodSpec
 from descanso.request import FieldDestination, FieldOut, RequestTransformer
@@ -27,7 +32,6 @@ from descanso.request_transformers import (
     Method,
     Query,
     QueryModelDump,
-    Url,
 )
 from descanso.response import HttpResponse, ResponseTransformer
 from descanso.response_transformers import (
@@ -39,33 +43,8 @@ from descanso.response_transformers import (
 from descanso.signature import make_method_spec
 
 DEFAULT_BODY_PARAM = "body"
-
 _MethodResultT = TypeVar("_MethodResultT")
 _MethodParamSpec = ParamSpec("_MethodParamSpec")
-
-
-class Decorator(Protocol):
-    @overload
-    def __call__(
-        self,
-        func: Callable[
-            Concatenate[Any, _MethodParamSpec],
-            Awaitable[_MethodResultT],
-        ],
-    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
-
-    @overload
-    def __call__(
-        self,
-        func: Callable[Concatenate[Any, _MethodParamSpec], _MethodResultT],
-    ) -> MethodBinder[_MethodParamSpec, _MethodResultT]: ...
-
-    def __call__(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-Transformer = RequestTransformer | ResponseTransformer
-UrlSrc = str | Callable | Url
 
 
 class _BuilderParams(TypedDict, total=False):
@@ -79,12 +58,6 @@ class _BuilderParams(TypedDict, total=False):
     response_body_loader: Loader | None
     response_body_pre_load: ResponseTransformer | None
     error_raiser: ResponseTransformer | None
-
-
-def _url_transformer(url: UrlSrc) -> Url:
-    if isinstance(url, Url):
-        return url
-    return Url(url)
 
 
 class RestBuilder(Decorator):
@@ -114,7 +87,7 @@ class RestBuilder(Decorator):
         **params: Unpack[_BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
-            _url_transformer(url),
+            url_transformer(url),
             Method("GET"),
             *transformers,
             **params,
@@ -127,7 +100,7 @@ class RestBuilder(Decorator):
         **params: Unpack[_BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
-            _url_transformer(url),
+            url_transformer(url),
             Method("POST"),
             *transformers,
             **params,
@@ -140,7 +113,7 @@ class RestBuilder(Decorator):
         **params: Unpack[_BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
-            _url_transformer(url),
+            url_transformer(url),
             Method("PUT"),
             *transformers,
             **params,
@@ -153,7 +126,7 @@ class RestBuilder(Decorator):
         **params: Unpack[_BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
-            _url_transformer(url),
+            url_transformer(url),
             Method("PATCH"),
             *transformers,
             **params,
@@ -166,7 +139,7 @@ class RestBuilder(Decorator):
         **params: Unpack[_BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
-            _url_transformer(url),
+            url_transformer(url),
             Method("DELETE"),
             *transformers,
             **params,
