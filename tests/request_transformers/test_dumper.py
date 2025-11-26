@@ -88,6 +88,7 @@ def test_body_model_dump(
     transformer: RequestTransformer,
     expected_request: HttpRequest,
 ):
+    assert str(transformer)
     assert transformer.transform_fields(fields_in) == []
     assert consumed_fields(fields_in, transformer) == []
     request = transformer.transform_request(
@@ -101,6 +102,7 @@ def test_body_model_dump(
 
 def test_body_json_dump(fields_in, fields_out):
     transformer = JsonDump()
+    assert str(transformer)
     assert transformer.transform_fields(fields_in) == []
     assert consumed_fields(fields_in, transformer) == []
     request = transformer.transform_request(

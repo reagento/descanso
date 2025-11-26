@@ -35,6 +35,7 @@ def test_ok(
 
     transformed_response = error_raiser.transform_response(response, {})
 
+    assert str(error_raiser)
     assert transformed_response == response
 
 
@@ -67,6 +68,7 @@ def test_error(
         error_raiser.transform_response(response, {})
 
     exc = exc_info.value
+    assert str(error_raiser)
     assert isinstance(exc, error_type)
     assert exc.status_code == response.status_code
     assert exc.status_text == response.status_text
