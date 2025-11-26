@@ -60,6 +60,12 @@ def get_extra(request: HttpRequest, expected_key: str) -> Any:
             return value
     return None
 
+class JsonRPCError(Exception):
+    def __init__(self, data: Any) -> None:
+        self.data = data  # TODO structured
+
+    def __repr__(self):
+        return f"<JsonRPCError>({self.data})"
 
 class IdGenerator(RequestTransformer):
     def transform_fields(
@@ -153,7 +159,7 @@ class UnpackJsonRPC(ResponseTransformer):
         return response
 
 
-class JsonRPCError(ResponseTransformer):
+class JsonRPCErrorRaiser(ResponseTransformer):
     def need_response_body(self, response: HttpResponse) -> bool:
         return True
 
@@ -164,7 +170,7 @@ class JsonRPCError(ResponseTransformer):
     ) -> HttpResponse:
         # TODO: check request id
         if error := response.body.get("error"):
-            raise ValueError(f"JSON RPC Error: {error}")
+            raise JsonRPCError(response.body)
         return response
 
 
@@ -273,7 +279,7 @@ class JsonRPCBuilder:
 
         error_raiser = self.params.get("json_rpc_error_raiser", ...)
         if error_raiser is ...:
-            spec.response_transformers.append(JsonRPCError())
+            spec.response_transformers.append(JsonRPCErrorRaiser())
         elif error_raiser:
             spec.response_transformers.append(error_raiser)
 
