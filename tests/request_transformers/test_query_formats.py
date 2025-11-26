@@ -25,6 +25,7 @@ def fields_in():
     ],
 )
 def test_list(transformer, expected_params, fields_in):
+    assert str(transformer)
     assert transformer.transform_fields(fields_in) == []
     assert consumed_fields(fields_in, transformer) == []
     request = HttpRequest(
@@ -46,6 +47,7 @@ def test_list(transformer, expected_params, fields_in):
     ],
 )
 def test_dict(transformer, expected_params, fields_in):
+    assert str(transformer)
     assert transformer.transform_fields(fields_in) == []
     assert consumed_fields(fields_in, transformer) == []
     request = HttpRequest(
@@ -59,6 +61,7 @@ def test_dict(transformer, expected_params, fields_in):
 
 def test_nested_php_style(fields_in):
     transformer = PhpStyleQuery()
+    assert str(transformer)
     assert transformer.transform_fields(fields_in) == []
     assert consumed_fields(fields_in, transformer) == []
     request = HttpRequest(

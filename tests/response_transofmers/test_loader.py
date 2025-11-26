@@ -17,6 +17,7 @@ def test_keep_response():
         body='{"x": 1}',
     )
     response2 = json_load.transform_response(response, {})
+    assert str(json_load)
     assert response2 == HttpResponse(
         status_code=200,
         status_text="OK",
@@ -32,6 +33,7 @@ def test_json_load():
         body='{"x": 1}',
     )
     response = json_load.transform_response(response, {})
+    assert str(json_load)
     assert response == HttpResponse(
         status_code=200,
         status_text="OK",
@@ -59,6 +61,7 @@ def test_model_load():
         body="x",
     )
     response = model_load.transform_response(response, {})
+    assert str(model_load)
     assert response == HttpResponse(
         status_code=200,
         status_text="OK",

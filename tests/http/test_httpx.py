@@ -2,6 +2,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient, Client
 
+from descanso import RestBuilder
 from descanso.http.httpx import AsyncHttpxClient, HttpxClient
 from .data import req_resp
 
@@ -41,3 +42,28 @@ async def test_async_httpx(async_client, req, expected_resp):
     async with async_client.asend_request(req) as resp:
         await resp.aload_body()
         assert resp == expected_resp
+
+
+def test_rest_httpx(server_addr, sync_session):
+    rest = RestBuilder()
+
+    class Client(HttpxClient):
+        @rest.get("/json")
+        def do_get(self, body: dict) -> dict: ...
+
+    client = Client(server_addr, sync_session)
+    resp = client.do_get({"x": 1})
+    assert resp == {"y": 2}
+
+
+@pytest.mark.asyncio
+async def test_rest_httpx_async(server_addr, async_session):
+    rest = RestBuilder()
+
+    class Client(AsyncHttpxClient):
+        @rest.get("/json")
+        def do_get(self, body: dict) -> dict: ...
+
+    client = Client(server_addr, async_session)
+    resp = await client.do_get({"x": 1})
+    assert resp == {"y": 2}
