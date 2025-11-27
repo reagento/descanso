@@ -4,6 +4,7 @@ from typing import Any
 
 from .client import Loader
 from .exceptions import ClientError, ServerError
+from .request import HttpRequest
 from .response import BaseResponseTransformer, HttpResponse
 
 
@@ -18,8 +19,8 @@ class BodyModelLoad(BaseResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         response.body = self.loader.load(response.body, self.type_hint)
         return response
@@ -39,8 +40,8 @@ class JsonLoad(BaseResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         if response.status_code not in self.codes:
             return response
@@ -69,8 +70,8 @@ class ErrorRaiser(BaseResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         if not self._is_status_code_allowed(response.status_code):
             if response.status_code >= 500:  # noqa: PLR2004
@@ -112,8 +113,8 @@ class KeepResponse(BaseResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         return HttpResponse(
             url=response.url,

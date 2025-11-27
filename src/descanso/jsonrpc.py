@@ -60,12 +60,24 @@ def get_extra(request: HttpRequest, expected_key: str) -> Any:
             return value
     return None
 
-class JsonRPCError(Exception):
-    def __init__(self, data: Any) -> None:
-        self.data = data  # TODO structured
+
+class BaseJsonRPCError(Exception):
+    pass
+
+
+class RequestIdMismatchError(BaseJsonRPCError):
+    pass
+
+
+class JsonRPCError(BaseJsonRPCError):
+    def __init__(self, code: int, message: str, data: Any) -> None:
+        self.code = code
+        self.message = message
+        self.data = data
 
     def __repr__(self):
-        return f"<JsonRPCError>({self.data})"
+        return f"JsonRPCError({self.code}, {self.message!r}, {self.data!r})"
+
 
 class IdGenerator(RequestTransformer):
     def transform_fields(
@@ -152,8 +164,8 @@ class UnpackJsonRPC(ResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         response.body = response.body.get("result")
         return response
@@ -165,12 +177,16 @@ class JsonRPCErrorRaiser(ResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
-        # TODO: check request id
+        request_id = get_extra(request, EXTRA_JSON_RPC_REQUEST_ID)
+        if request_id != response.body.get("id"):
+            raise RequestIdMismatchError
         if error := response.body.get("error"):
-            raise JsonRPCError(response.body)
+            raise JsonRPCError(
+                error["code"], error["message"], error.get("data"),
+            )
         return response
 
 
@@ -325,7 +341,6 @@ class JsonRPCBuilder:
         self._add_default_response_transformers(spec)
         return MethodBinder(spec)
 
-
     @overload
     def __call__(
         self,
@@ -348,7 +363,6 @@ class JsonRPCBuilder:
         *transformers: Transformer,
         **params: Unpack[_BuilderParams],
     ) -> "JsonRPCBuilder": ...
-
 
     def __call__(
         self,
