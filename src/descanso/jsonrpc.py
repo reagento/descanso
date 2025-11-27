@@ -184,7 +184,9 @@ class JsonRPCErrorRaiser(ResponseTransformer):
             raise RequestIdMismatchError
         if error := response.body.get("error"):
             raise JsonRPCError(
-                error["code"], error["message"], error.get("data"),
+                error["code"],
+                error["message"],
+                error.get("data"),
             )
         return response
 
