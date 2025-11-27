@@ -3,6 +3,7 @@ from typing import (
     Any,
     Concatenate,
     ParamSpec,
+    Protocol,
     TypedDict,
     TypeVar,
     overload,
@@ -64,7 +65,7 @@ class BaseJsonRPCError(Exception):
     pass
 
 
-class RequestIdMismatchError(BaseJsonRPCError):
+class JsonRPCIdMismatchError(BaseJsonRPCError):
     pass
 
 
@@ -78,7 +79,14 @@ class JsonRPCError(BaseJsonRPCError):
         return f"JsonRPCError({self.code}, {self.message!r}, {self.data!r})"
 
 
-class IdGenerator(RequestTransformer):
+class IdGenerator(Protocol):
+    def __call__(self) -> str: ...
+
+
+class JsonRPCIdGenerator(RequestTransformer):
+    def __init__(self, id_generator: IdGenerator | None = None) -> None:
+        self.id_generator = id_generator
+
     def transform_fields(
         self,
         fields_in: Sequence[FieldIn],
@@ -92,7 +100,9 @@ class IdGenerator(RequestTransformer):
         ]
 
     def _new_id(self) -> str:
-        return str(uuid4())
+        if not self.id_generator:
+            return str(uuid4())
+        return self.id_generator()
 
     def transform_request(
         self,
@@ -103,6 +113,9 @@ class IdGenerator(RequestTransformer):
     ) -> HttpRequest:
         request.extras.append((EXTRA_JSON_RPC_REQUEST_ID, self._new_id()))
         return request
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.id_generator})"
 
 
 class JsonRPCMethod(RequestTransformer):
@@ -131,6 +144,9 @@ class JsonRPCMethod(RequestTransformer):
         request.extras.append((EXTRA_JSON_RPC_METHOD, self.method))
         return request
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.method!r})"
+
 
 class PackJsonRPC(RequestTransformer):
     def transform_fields(
@@ -156,6 +172,9 @@ class PackJsonRPC(RequestTransformer):
         }
         return request
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
 
 class UnpackJsonRPC(ResponseTransformer):
     def need_response_body(self, response: HttpResponse) -> bool:
@@ -169,6 +188,9 @@ class UnpackJsonRPC(ResponseTransformer):
         response.body = response.body.get("result")
         return response
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
 
 class JsonRPCErrorRaiser(ResponseTransformer):
     def need_response_body(self, response: HttpResponse) -> bool:
@@ -181,7 +203,7 @@ class JsonRPCErrorRaiser(ResponseTransformer):
     ) -> HttpResponse:
         request_id = get_extra(request, EXTRA_JSON_RPC_REQUEST_ID)
         if request_id != response.body.get("id"):
-            raise RequestIdMismatchError
+            raise JsonRPCIdMismatchError
         if error := response.body.get("error"):
             raise JsonRPCError(
                 error["code"],
@@ -190,12 +212,15 @@ class JsonRPCErrorRaiser(ResponseTransformer):
             )
         return response
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
 
 class _BuilderParams(TypedDict, total=False):
     body_name: str
     http_method: str
     url: UrlSrc
-    request_id_generator: RequestTransformer
+    id_generator: IdGenerator
 
     request_body_dumper: Dumper | None
     request_body_post_dump: RequestTransformer | None
@@ -258,11 +283,14 @@ class JsonRPCBuilder:
             if dumper:
                 self._add_request_transformer(spec, BodyModelDump(dumper))
 
-        id_generator = self.params.get("request_id_generator", ...)
+        id_generator = self.params.get("id_generator", ...)
         if id_generator is ...:
-            self._add_request_transformer(spec, IdGenerator())
+            self._add_request_transformer(spec, JsonRPCIdGenerator())
         elif id_generator:
-            self._add_request_transformer(spec, id_generator)
+            self._add_request_transformer(
+                spec,
+                JsonRPCIdGenerator(id_generator),
+            )
 
         url_src = self.params.get("url") or ""
         self._add_request_transformer(spec, url_transformer(url_src))
