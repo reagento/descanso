@@ -104,3 +104,29 @@ def test_params():
         dirty[UnpackJsonRPC](),
         dirty[BodyModelLoad](type_hint=Model, loader=response_body_loader),
     ]
+
+def test_override():
+    jsonrpc = JsonRPCBuilder(url="/foo", body_name="body")
+
+    class Api:
+        @jsonrpc("methodname", url="/bar", body_name="data")
+        def do(self, data: int) -> Model:
+            """Hello"""
+
+    assert Api.do.spec.name == "do"
+    assert Api.do.spec.doc == "Hello"
+    assert Api.do.spec.request_transformers == [
+        dirty[JsonRPCMethod](method="methodname"),
+        dirty[Body](arg="data"),
+        dirty[JsonRPCIdGenerator](id_generator=None),
+        dirty[Url](original_template="/bar"),
+        dirty[PackJsonRPC](),
+        dirty[JsonDump](),
+        dirty[Method](method="POST"),
+    ]
+    assert Api.do.spec.response_transformers == [
+        dirty[ErrorRaiser](),
+        dirty[JsonLoad](),
+        dirty[JsonRPCErrorRaiser](),
+        dirty[UnpackJsonRPC](),
+    ]
