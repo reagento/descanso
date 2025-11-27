@@ -17,6 +17,7 @@ except ImportError:
 
 from descanso import Dumper, Loader
 from descanso.builder_base import (
+    DEFAULT_BODY_PARAM,
     Transformer,
     UrlSrc,
     url_transformer,
@@ -44,8 +45,6 @@ from descanso.response_transformers import (
     KeepResponse,
 )
 from descanso.signature import make_method_spec
-
-DEFAULT_BODY_PARAM = "body"
 
 _MethodResultT = TypeVar("_MethodResultT")
 _MethodParamSpec = ParamSpec("_MethodParamSpec")
