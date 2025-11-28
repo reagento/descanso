@@ -217,7 +217,6 @@ class JsonRPCErrorRaiser(ResponseTransformer):
 
 
 class _BuilderParams(TypedDict, total=False):
-    body_name: str
     http_method: str
     url: UrlSrc
     id_generator: IdGenerator
@@ -266,14 +265,18 @@ class JsonRPCBuilder:
         return None
 
     def _add_body_transformer(self, spec: MethodSpec):
-        default_body_name = self.params.get("body_name", DEFAULT_BODY_PARAM)
-
         body_out = self._get_body_field(spec)
+        if body_out is None:
+            body_name = None
+        else:
+            body_name = body_out.name
         for field in spec.fields_in:
             if field.consumed_by:
                 continue
-            if not body_out and field.name == default_body_name:
-                self._add_request_transformer(spec, Body(field.name))
+            if body_name:
+                raise ValueError("Cannot have multiple body fields")
+            body_name = field.name
+            self._add_request_transformer(spec, Body(field.name))
 
     def _add_default_request_body_transformers(self, spec: MethodSpec):
         self._add_body_transformer(spec)

@@ -67,7 +67,6 @@ def test_params():
     jsonrpc = JsonRPCBuilder(
         req_additional,
         resp_additional,
-        body_name="data",
         http_method="GET",
         id_generator=id_generator,
         request_body_dumper=request_body_dumper,
@@ -106,10 +105,10 @@ def test_params():
     ]
 
 def test_override():
-    jsonrpc = JsonRPCBuilder(url="/foo", body_name="body")
+    jsonrpc = JsonRPCBuilder(url="/foo")
 
     class Api:
-        @jsonrpc("methodname", url="/bar", body_name="data")
+        @jsonrpc("methodname", url="/bar")
         def do(self, data: int) -> Model:
             """Hello"""
 
