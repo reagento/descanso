@@ -1,6 +1,11 @@
 from inspect import Parameter, signature
 from typing import TypedDict, Unpack, get_args, get_origin, get_type_hints
 
+try:
+    from typing import Unpack
+except ImportError:
+    Unpack = None
+
 
 class _ExampleTypedDict(TypedDict):
     pass
@@ -40,4 +45,5 @@ def unpack_signature(app, obj, bound_method):
 
 
 def setup(app):
-    app.connect("autodoc-before-process-signature", unpack_signature)
+    if Unpack:
+        app.connect("autodoc-before-process-signature", unpack_signature)
