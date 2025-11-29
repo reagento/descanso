@@ -1,12 +1,9 @@
-from contextlib import AbstractContextManager
 from typing import Any
-from unittest.mock import Mock
 
-from dirty_equals import Contains, DirtyEquals, HasAttributes, IsInstance
+from dirty_equals import Contains
 
 from descanso import Loader, RestBuilder
-from descanso.client import Dumper, SyncClient, SyncResponseWrapper
-from descanso.request import HttpRequest
+from descanso.client import Dumper
 from descanso.request_transformers import (
     Body,
     BodyModelDump,
@@ -19,28 +16,7 @@ from descanso.request_transformers import (
     Url,
 )
 from descanso.response_transformers import BodyModelLoad, ErrorRaiser, JsonLoad
-
-
-class _Dirty:
-    def __getitem__(self, item: type):
-        def check(**attrs) -> DirtyEquals:
-            return IsInstance(item) & HasAttributes(**attrs)
-
-        return check
-
-
-dirty = _Dirty()
-
-
-class MockClient(SyncClient):
-    def __init__(self, mock: Mock) -> None:
-        self._mock = mock
-
-    def send_request(
-        self,
-        request: HttpRequest,
-    ) -> AbstractContextManager[SyncResponseWrapper]:
-        return self._mock(request)
+from .utils import dirty
 
 
 class Model:
@@ -55,15 +31,15 @@ def test_get_with_query():
         def do_get(self, x: int) -> Model:
             """Hello"""
 
-    assert Api.do_get.name == "do_get"
-    assert Api.do_get.doc == "Hello"
-    assert Api.do_get.request_transformers == [
+    assert Api.do_get.spec.name == "do_get"
+    assert Api.do_get.spec.doc == "Hello"
+    assert Api.do_get.spec.request_transformers == [
         dirty[Url](original_template="/foo"),
         dirty[Method](method="GET"),
         dirty[Query](name_out="x", original_template=None),
         dirty[FormQuery](),
     ]
-    assert Api.do_get.response_transformers == [
+    assert Api.do_get.spec.response_transformers == [
         dirty[ErrorRaiser](),
         dirty[JsonLoad](),
     ]
@@ -77,14 +53,14 @@ def test_post_with_url_body():
         def do_post(self, x: int, body: str) -> Model:
             """Hello"""
 
-    assert Api.do_post.request_transformers == [
+    assert Api.do_post.spec.request_transformers == [
         dirty[Url](original_template="/foo{x}"),
         dirty[Method](method="POST"),
         dirty[Body](arg="body"),
         dirty[JsonDump](),
         dirty[FormQuery](),
     ]
-    assert Api.do_post.response_transformers == [
+    assert Api.do_post.spec.response_transformers == [
         dirty[ErrorRaiser](),
         dirty[JsonLoad](),
     ]
@@ -109,19 +85,19 @@ def test_methods():
         @rest.patch("/")
         def do_patch(self) -> None: ...
 
-    assert Api.do_get.request_transformers == Contains(
+    assert Api.do_get.spec.request_transformers == Contains(
         dirty[Method](method="GET"),
     )
-    assert Api.do_post.request_transformers == Contains(
+    assert Api.do_post.spec.request_transformers == Contains(
         dirty[Method](method="POST"),
     )
-    assert Api.do_delete.request_transformers == Contains(
+    assert Api.do_delete.spec.request_transformers == Contains(
         dirty[Method](method="DELETE"),
     )
-    assert Api.do_put.request_transformers == Contains(
+    assert Api.do_put.spec.request_transformers == Contains(
         dirty[Method](method="PUT"),
     )
-    assert Api.do_patch.request_transformers == Contains(
+    assert Api.do_patch.spec.request_transformers == Contains(
         dirty[Method](method="PATCH"),
     )
 
@@ -159,7 +135,7 @@ def test_params():
         @rest.get("/")
         def do_get(self, x: int, body: str) -> Model: ...
 
-    assert Api.do_get.request_transformers == [
+    assert Api.do_get.spec.request_transformers == [
         dirty[Url](original_template="/"),
         dirty[Method](method="GET"),
         req_additional,
@@ -170,7 +146,7 @@ def test_params():
         dirty[QueryModelDump](dumper=query_param_dumper),
         query_param_post_dump,
     ]
-    assert Api.do_get.response_transformers == [
+    assert Api.do_get.spec.response_transformers == [
         resp_additional,
         error_raiser,
         response_body_pre_load,
@@ -191,7 +167,7 @@ def test_override_params():
         @rest.get("/", response_body_pre_load=response_body_pre_load2)
         def do_get(self, x: int, body: str) -> Model: ...
 
-    assert Api.do_get.response_transformers == [
+    assert Api.do_get.spec.response_transformers == [
         error_raiser,
         response_body_pre_load2,
     ]

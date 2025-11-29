@@ -11,6 +11,7 @@ from descanso.client import (
 )
 from descanso.request import HttpRequest, RequestTransformer
 from descanso.response import ResponseTransformer
+from descanso.utils import ensure_trailing_slash
 
 
 class RequestsResponseWrapper(SyncResponseWrapper):
@@ -35,7 +36,7 @@ class RequestsClient(SyncClient):
         super().__init__(
             transformers=transformers,
         )
-        self._base_url = base_url
+        self._base_url = ensure_trailing_slash(base_url)
         self._session = session
 
     @contextmanager

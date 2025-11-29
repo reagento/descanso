@@ -1,6 +1,7 @@
 from typing import Any
 
 from descanso import Loader
+from descanso.request import HttpRequest
 from descanso.response import HttpResponse
 from descanso.response_transformers import (
     BodyModelLoad,
@@ -16,7 +17,8 @@ def test_keep_response():
         status_text="OK",
         body='{"x": 1}',
     )
-    response2 = json_load.transform_response(response, {})
+    response2 = json_load.transform_response(HttpRequest(), response)
+    assert str(json_load)
     assert response2 == HttpResponse(
         status_code=200,
         status_text="OK",
@@ -31,7 +33,8 @@ def test_json_load():
         status_text="OK",
         body='{"x": 1}',
     )
-    response = json_load.transform_response(response, {})
+    response = json_load.transform_response(HttpRequest(), response)
+    assert str(json_load)
     assert response == HttpResponse(
         status_code=200,
         status_text="OK",
@@ -58,7 +61,8 @@ def test_model_load():
         status_text="OK",
         body="x",
     )
-    response = model_load.transform_response(response, {})
+    response = model_load.transform_response(HttpRequest(), response)
+    assert str(model_load)
     assert response == HttpResponse(
         status_code=200,
         status_text="OK",

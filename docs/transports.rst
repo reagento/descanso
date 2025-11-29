@@ -5,6 +5,14 @@ Descanso supports different libraries to send HTTP requests. To switch between t
 
 For ``requests``
 
+.. note::
+    This backend requires the ``requests`` library to be installed.
+    You can install it using pip:
+
+    .. code-block:: bash
+
+        pip install requests
+
 .. code-block:: python
 
     from descanso import RestBuilder
@@ -20,6 +28,14 @@ For ``requests``
 
 For ``aiohttp``:
 
+.. note::
+    This backend requires the ``aiohttp`` library to be installed.
+    You can install it using pip:
+
+    .. code-block:: bash
+
+        pip install aiohttp
+
 .. code-block:: python
 
     from descanso import RestBuilder
@@ -33,6 +49,32 @@ For ``aiohttp``:
         async def foo(): ...
 
 Adding ``async`` in front of function is not obligatory, function method becomes async automatically based on client class
+
+
+For ``httpx``:
+
+.. note::
+    This backend requires the ``httpx`` library to be installed.
+    You can install it using pip:
+
+    .. code-block:: bash
+
+        pip install httpx
+
+.. code-block:: python
+
+    from descanso import RestBuilder
+    from descanso.http.httpx import HttpxClient, AsyncHttpxClient
+
+    rest = RestBuilder()
+
+    class AsyncClient(AsyncHttpxClient):
+        @rest.get("/")
+        async def foo(): ...
+
+    class SyncClient(HttpxClient):
+        @rest.get("/")
+        def foo(): ...
 
 
 Reusing signatures between transports

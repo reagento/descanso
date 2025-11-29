@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools==80.9.0"]
+requires = [
+    "setuptools==80.9.0",
+    "setuptools-scm[simple]==9.2.0",
+]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -9,16 +12,15 @@ include-package-data = true
 where = ["src"]
 
 [project]
-
 name = "descanso"
-version = "0.6.0"
+dynamic = ["version"]
 readme = "README.md"
 authors = [
     { name = "Andrey Tikhonov", email = "17@itishka.org" },
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-description = "An utility for writing simple clients for REST like APIs"
+description = "A client framework for HTTP APIs"
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3.10",
@@ -42,3 +44,20 @@ dependencies = [
 "Bug Tracker" = "https://github.com/reagento/descanso/issues"
 
 
+[tool.setuptools_scm]
+version_file = "src/descanso/_version.py"
+version_file_template = """\
+# This file auto generated!
+# DO NOT EDIT MANUALLY!
+
+version: str = "{version}"
+__version__: str = "{version}"
+
+commit_hash: str = "{scm_version.node}"
+version_timestamp: str = "{scm_version.time}"
+
+tag: str = "{scm_version.tag}"
+branch: str = "{scm_version.branch}"
+commit_date: str = "{scm_version.node_date}"
+commit_count_since_tag: int = {scm_version.distance}
+"""

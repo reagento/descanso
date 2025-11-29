@@ -16,6 +16,7 @@ from descanso.request_transformers import (
     Extra,
     File,
     Header,
+    Method,
     Query,
     Skip,
     Url,
@@ -62,6 +63,7 @@ def data_in():
 )
 def test_body(transformer, consumed, body, out, fields_in, data_in):
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == out
     req = transformer.transform_request(
@@ -104,6 +106,7 @@ def test_body(transformer, consumed, body, out, fields_in, data_in):
 )
 def test_extra(transformer, consumed, extras, out, fields_in, data_in):
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == out
     req = transformer.transform_request(
@@ -146,6 +149,7 @@ def test_extra(transformer, consumed, extras, out, fields_in, data_in):
 )
 def test_header(transformer, consumed, headers, out, fields_in, data_in):
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == out
     req = transformer.transform_request(
@@ -188,6 +192,7 @@ def test_header(transformer, consumed, headers, out, fields_in, data_in):
 )
 def test_query(transformer, consumed, params, out, fields_in, data_in):
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == out
     req = transformer.transform_request(
@@ -216,6 +221,7 @@ def test_query(transformer, consumed, params, out, fields_in, data_in):
 )
 def test_skip(transformer, consumed, out, fields_in, data_in):
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == out
     req = transformer.transform_request(
@@ -238,6 +244,7 @@ def test_skip(transformer, consumed, out, fields_in, data_in):
 def test_url(template, url, consumed, fields_in, data_in):
     transformer = Url(template)
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == [FieldOut(None, FieldDestination.URL, str)]
     req = transformer.transform_request(
@@ -294,6 +301,7 @@ def test_url(template, url, consumed, fields_in, data_in):
 )
 def test_file(transformer, consumed, files, out, fields_in, data_in):
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert consumed_fields(fields_in, transformer) == consumed
     assert fields_out == out
     req = transformer.transform_request(
@@ -311,6 +319,7 @@ def test_pipe(fields_in, data_in):
     body_transformer = Body("i")
     transformer = query_transformer | query_transformer2 | body_transformer
     fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
     assert fields_out == [
         FieldOut("i", FieldDestination.QUERY, int),
         FieldOut("s", FieldDestination.QUERY, str),
@@ -332,3 +341,18 @@ def test_pipe(fields_in, data_in):
             ("s", "hello"),
         ],
     )
+
+
+def test_method(fields_in, data_in):
+    transformer = Method("GET")
+    fields_out = transformer.transform_fields(fields_in)
+    assert str(transformer)
+    assert consumed_fields(fields_in, transformer) == []
+    assert fields_out == []
+    req = transformer.transform_request(
+        HttpRequest(),
+        fields_in,
+        fields_out,
+        data_in,
+    )
+    assert req == HttpRequest(method="GET")
