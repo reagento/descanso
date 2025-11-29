@@ -1,5 +1,5 @@
 from inspect import Parameter, signature
-from typing import TypedDict, Unpack, get_args, get_origin, get_type_hints
+from typing import TypedDict, get_args, get_origin, get_type_hints
 
 try:
     from typing import Unpack
