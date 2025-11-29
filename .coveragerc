@@ -4,3 +4,5 @@ exclude_lines =
     @overload
 [run]
 relative_files = true
+omit =
+    src/descanso/_version.py
