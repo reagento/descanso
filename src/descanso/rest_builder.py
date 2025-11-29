@@ -47,7 +47,7 @@ _MethodResultT = TypeVar("_MethodResultT")
 _MethodParamSpec = ParamSpec("_MethodParamSpec")
 
 
-class _BuilderParams(TypedDict, total=False):
+class BuilderParams(TypedDict):
     body_name: str
 
     query_param_dumper: Dumper | None
@@ -64,7 +64,7 @@ class RestBuilder(Decorator):
     def __init__(
         self,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> None:
         self.transformers = transformers
         self.params = params
@@ -72,7 +72,7 @@ class RestBuilder(Decorator):
     def with_params(
         self,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "RestBuilder":
         return RestBuilder(
             *transformers,
@@ -84,7 +84,7 @@ class RestBuilder(Decorator):
         self,
         url: UrlSrc,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
             url_transformer(url),
@@ -97,7 +97,7 @@ class RestBuilder(Decorator):
         self,
         url: UrlSrc,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
             url_transformer(url),
@@ -110,7 +110,7 @@ class RestBuilder(Decorator):
         self,
         url: UrlSrc,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
             url_transformer(url),
@@ -123,7 +123,7 @@ class RestBuilder(Decorator):
         self,
         url: UrlSrc,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
             url_transformer(url),
@@ -136,7 +136,7 @@ class RestBuilder(Decorator):
         self,
         url: UrlSrc,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "RestBuilder":
         return self.with_params(
             url_transformer(url),

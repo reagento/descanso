@@ -227,7 +227,7 @@ class JsonRPCErrorRaiser(ResponseTransformer):
         return f"{self.__class__.__name__}()"
 
 
-class _BuilderParams(TypedDict, total=False):
+class BuilderParams(TypedDict, total=False):
     http_method: str
     url: UrlSrc
     id_generator: IdGenerator
@@ -245,7 +245,7 @@ class JsonRPCBuilder:
     def __init__(
         self,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> None:
         self.transformers = transformers
         self.params = params
@@ -253,7 +253,7 @@ class JsonRPCBuilder:
     def with_params(
         self,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "JsonRPCBuilder":
         return JsonRPCBuilder(
             *transformers,
@@ -404,14 +404,14 @@ class JsonRPCBuilder:
         self,
         method: str,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> "JsonRPCBuilder": ...
 
     def __call__(
         self,
         func_or_method: str | Callable,
         *transformers: Transformer,
-        **params: Unpack[_BuilderParams],
+        **params: Unpack[BuilderParams],
     ) -> Any:
         if transformers or params:
             instance = self.with_params(*transformers, **params)

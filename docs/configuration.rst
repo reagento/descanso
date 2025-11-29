@@ -177,3 +177,9 @@ You can join multiple transformers using ``|`` if you want different logic.
     rest = RestBuilder(
         error_raiser=ErrorRaiser(codes=[422], need_body=True) | ErrorRaiser()
     )
+
+
+API
+===========================
+
+.. autoclass:: descanso.RestBuilder

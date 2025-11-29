@@ -26,6 +26,7 @@ To find out how to use it, follow to :ref:`quickstart`
 
    quickstart
    configuration
+   jsonrpc
    auth
    transports
    migration_from_dcr
