@@ -18,7 +18,6 @@ except ImportError:
 
 from descanso import Dumper, Loader
 from descanso.builder_base import (
-    DEFAULT_BODY_PARAM,
     Transformer,
     UrlSrc,
     url_transformer,
@@ -63,6 +62,18 @@ def get_extra(request: HttpRequest, expected_key: str) -> Any:
 
 class BaseJsonRPCError(Exception):
     pass
+
+
+class MultipleBodyError(BaseJsonRPCError):
+    def __init__(self, existing: str, new: str):
+        self.existing = existing
+        self.new = new
+
+    def __str__(self):
+        return (
+            f"Cannot have multiple body fields, "
+            f"found {self.existing}, {self.new}"
+        )
 
 
 class JsonRPCIdMismatchError(BaseJsonRPCError):
@@ -274,7 +285,7 @@ class JsonRPCBuilder:
             if field.consumed_by:
                 continue
             if body_name:
-                raise ValueError("Cannot have multiple body fields")
+                raise MultipleBodyError(body_name, field.name)
             body_name = field.name
             self._add_request_transformer(spec, Body(field.name))
 

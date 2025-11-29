@@ -104,6 +104,7 @@ def test_params():
         dirty[BodyModelLoad](type_hint=Model, loader=response_body_loader),
     ]
 
+
 def test_override():
     jsonrpc = JsonRPCBuilder(url="/foo")
 
