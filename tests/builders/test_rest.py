@@ -1,12 +1,9 @@
-from contextlib import AbstractContextManager
 from typing import Any
-from unittest.mock import Mock
 
-from dirty_equals import Contains, DirtyEquals, HasAttributes, IsInstance
+from dirty_equals import Contains
 
 from descanso import Loader, RestBuilder
-from descanso.client import Dumper, SyncClient, SyncResponseWrapper
-from descanso.request import HttpRequest
+from descanso.client import Dumper
 from descanso.request_transformers import (
     Body,
     BodyModelDump,
@@ -19,28 +16,7 @@ from descanso.request_transformers import (
     Url,
 )
 from descanso.response_transformers import BodyModelLoad, ErrorRaiser, JsonLoad
-
-
-class _Dirty:
-    def __getitem__(self, item: type):
-        def check(**attrs) -> DirtyEquals:
-            return IsInstance(item) & HasAttributes(**attrs)
-
-        return check
-
-
-dirty = _Dirty()
-
-
-class MockClient(SyncClient):
-    def __init__(self, mock: Mock) -> None:
-        self._mock = mock
-
-    def send_request(
-        self,
-        request: HttpRequest,
-    ) -> AbstractContextManager[SyncResponseWrapper]:
-        return self._mock(request)
+from .utils import dirty
 
 
 class Model:

@@ -23,55 +23,10 @@ from descanso.response_transformers import (
     BodyModelLoad,
 )
 from descanso.signature import make_method_spec
+from descanso.jsonrpc import JsonRPCBuilder
 
 DEFAULT_BODY_PARAM = "body"
 
-
-class PackJsonRPC(RequestTransformer):
-    def  __init__(self, method: str) -> None:
-        self.method = method
-
-    def transform_request(
-        self,
-        request: HttpRequest,
-        fields_in: Sequence[FieldIn],
-        fields_out: Sequence[FieldOut],
-        data: dict[str, Any],
-    ) -> HttpRequest:
-        request.body = {
-            "jsonrpc": "2.0",
-            "id": str(uuid4()),
-            "method": self.method,
-            "params": request.body,
-        }
-        return request
-
-
-class UnpackJsonRPC(ResponseTransformer):
-    def need_response_body(self, response: HttpResponse) -> bool:
-        return True
-
-    def transform_response(
-        self,
-        response: HttpResponse,
-        fields: dict[str, Any],
-    ) -> HttpResponse:
-        response.body = response.body.get("result")
-        return response
-
-
-class JsonRPCError(ResponseTransformer):
-    def need_response_body(self, response: HttpResponse) -> bool:
-        return True
-
-    def transform_response(
-        self,
-        response: HttpResponse,
-        fields: dict[str, Any],
-    ) -> HttpResponse:
-        if error := response.body.get("error"):
-            raise ValueError(f"JSON RPC Error: {error}")
-        return response
 
 
 retort = Retort(
@@ -81,48 +36,10 @@ retort = Retort(
     ],
 )
 
-
-def _add_request_transformer(
-        spec: MethodSpec,
-        transformer: RequestTransformer,
-):
-    spec.request_transformers.append(transformer)
-    spec.fields_out.extend(transformer.transform_fields(spec.fields_in))
-
-
-def jsonrpc(
-    method: str,
-    *transformers: RequestTransformer | ResponseTransformer,
-):
-    def decorator(func):
-        spec = make_method_spec(
-            func,
-            transformers=transformers,
-            is_in_class=True,
-        )
-        body_out = next(
-            (field for field in spec.fields_out if field.dest is FieldDestination.BODY),
-            None,
-        )
-        for field in spec.fields_in:
-            if not body_out and field.name == DEFAULT_BODY_PARAM:
-                _add_request_transformer(spec, Body(field.name))
-        spec.request_transformers.append(BodyModelDump(retort))
-        spec.request_transformers.append(PackJsonRPC(method))
-        spec.request_transformers.append(Method("POST"))
-        spec.request_transformers.append(JsonDump())
-
-        spec.response_transformers.append(ErrorRaiser())
-        spec.response_transformers.append(JsonLoad())
-        spec.response_transformers.append(JsonRPCError())
-        spec.response_transformers.append(UnpackJsonRPC())
-        if spec.result_type is HttpResponse:
-            spec.response_transformers.append(KeepResponse(need_body=False))
-        elif spec.result_type is not Any and spec.result_type is not object:
-            spec.response_transformers.append(BodyModelLoad(spec.result_type, loader=retort))
-        return MethodBinder(spec)
-
-    return decorator
+jsonrpc = JsonRPCBuilder(
+    request_body_dumper=retort,
+    response_body_loader=retort,
+)
 
 
 # client
@@ -141,7 +58,6 @@ class MyClient(RequestsClient):
             base_url="https://eth.merkle.io/",
             session=Session(),
         )
-
 
     @jsonrpc("eth_getTransactionByHash")
     def get_transaction_by_hash(self, body: list[str]) -> Transaction:

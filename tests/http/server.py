@@ -59,6 +59,43 @@ async def json(request: web.Request) -> web.Response:
     return web.json_response({"y": 2})
 
 
+async def jsonrpc(request: web.Request) -> web.Response:
+    data = await request.json()
+    request_id = data["id"]
+    assert data["jsonrpc"] == "2.0"
+    if data["method"] == "good":
+        assert data["params"] == [42]
+        return web.json_response(
+            {
+                "id": request_id,
+                "jsonrpc": "2.0",
+                "result": 42,
+            },
+        )
+    elif data["method"] == "bad":
+        return web.json_response(
+            {
+                "id": request_id,
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": -32000,
+                    "message": "My error",
+                },
+            },
+        )
+    else:
+        return web.json_response(
+            {
+                "id": request_id,
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": -32601,
+                    "message": "Method not found",
+                },
+            },
+        )
+
+
 def new_app() -> web.Application:
     app = web.Application()
     app.add_routes(
@@ -70,6 +107,7 @@ def new_app() -> web.Application:
             web.delete("/delete", delete),
             web.post("/files", files),
             web.post("/form", form),
+            web.post("/jsonrpc", jsonrpc),
         ],
     )
     return app
