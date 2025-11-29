@@ -4,6 +4,8 @@ from typing import Any, Protocol, runtime_checkable
 
 from kiss_headers import Headers
 
+from descanso.request import HttpRequest
+
 
 @dataclass
 class HttpResponse:
@@ -23,8 +25,8 @@ class ResponseTransformer(Protocol):
     @abstractmethod
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         raise NotImplementedError
 
@@ -35,8 +37,8 @@ class BaseResponseTransformer(ResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         return response
 
@@ -56,9 +58,9 @@ class PipeResponseTransformer(BaseResponseTransformer):
 
     def transform_response(
         self,
+        request: HttpRequest,
         response: HttpResponse,
-        fields: dict[str, Any],
     ) -> HttpResponse:
         for other in self.others:
-            response = other.transform_response(response, fields)
+            response = other.transform_response(request, response)
         return response

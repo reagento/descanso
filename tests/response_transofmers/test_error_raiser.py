@@ -1,6 +1,7 @@
 import pytest
 
 from descanso.exceptions import ClientError, HttpStatusError, ServerError
+from descanso.request import HttpRequest
 from descanso.response import HttpResponse
 from descanso.response_transformers import ErrorRaiser
 
@@ -33,7 +34,10 @@ def test_ok(
     error_raiser = ErrorRaiser(except_codes=except_codes, codes=codes)
     response = HttpResponse(status_code=status_code, status_text=status_text)
 
-    transformed_response = error_raiser.transform_response(response, {})
+    transformed_response = error_raiser.transform_response(
+        HttpRequest(),
+        response,
+    )
 
     assert str(error_raiser)
     assert transformed_response == response
@@ -65,7 +69,7 @@ def test_error(
     response = HttpResponse(status_code=status_code, status_text=status_text)
 
     with pytest.raises(error_type) as exc_info:
-        error_raiser.transform_response(response, {})
+        error_raiser.transform_response(HttpRequest(), response)
 
     exc = exc_info.value
     assert str(error_raiser)
