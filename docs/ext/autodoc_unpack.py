@@ -23,23 +23,27 @@ def unpack_signature(app, obj, bound_method):
     new_params = []
     for param in sig.parameters.values():
         hint = hints.get(param.name)
+        # Not an Unpack[...] annotation → keep param as-is
         if get_origin(hint) != Unpack:
             new_params.append(param)
             continue
-        subargs = get_args(hint)[0]
-        if type(subargs) != TypedDictMeta:
+        # Expect Unpack[SomeTypedDict]
+        args = get_args(hint)
+        if len(args) != 1:
             new_params.append(param)
             continue
-        subargs_hints = get_type_hints(subargs)
-        for key, value in subargs_hints.items():
+        typed_dict_type = args[0]
+        if type(typed_dict_type) != TypedDictMeta:
+            new_params.append(param)
+            continue
+        for key, annotation in get_type_hints(typed_dict_type).items():
             new_params.append(
                 Parameter(
                     name=key,
                     kind=Parameter.KEYWORD_ONLY,
-                    annotation=value,
+                    annotation=annotation,
                 ),
             )
-            hints[key] = value
 
     obj.__signature__ = sig.replace(parameters=new_params)
 
