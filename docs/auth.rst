@@ -3,15 +3,20 @@
 Authorization
 ===========================
 
-There are a few approaches to have authorization:
+This section covers different approaches to add authentication to your API requests.
 
-**Static auth data**. Just add transformer corresponding to your logic.
-You can reference ``self`` object to get data.
-Note, that we are not using f-strings here, format string will be evaluated later.
+Static auth data
+----------------------------
+
+For static credentials stored in your client instance, use a transformer with a format string that references the client (``self``).
+The format string is evaluated when the request is built, not when the client instance is created.
 
 .. code-block:: python
 
-    class RequestsClient(SyncClient):
+    from descanso import SyncClient
+    from descanso.request_transformers import Header
+
+    class ApiClient(SyncClient):
         def __init__(self, base_url: str, session: Session, token: str):
             super().__init__(
                 base_url=base_url,
@@ -22,26 +27,45 @@ Note, that we are not using f-strings here, format string will be evaluated late
             )
             self.token = token
 
-**Dynamic auth data**. You need to redefine ``send_request`` or ``asend_request`` and implement token retrieval logic there.
+Dynamic auth data
+----------------------------
+
+For dynamic credentials that require custom retrieval logic (e.g., token refresh or rotation),
+override the ``send_request`` or ``asend_request`` method and implement your authentication logic there.
 
 .. code-block:: python
 
-    class RequestsClient(RequestsClient):
+    from descanso import SyncClient
+    from descanso.request import HttpRequest
+
+    class ApiClient(SyncClient):
         def send_request(
             self,
             request: HttpRequest,
         ) -> AbstractContextManager[SyncResponseWrapper]:
-            token = get_token()  # custom logic here
+            token = self._get_fresh_token()  # custom logic
             request.headers.append(("Authorization", f"Bearer {token}"))
-            super().send_request(request)
+            return super().send_request(request)
 
-**Basic authentication**. Use the :class:`~descanso.request_transformers.BasicAuth` transformer to add an ``Authorization`` header with the Basic scheme.
-The ``from_credentials`` classmethod accepts constant login and password values.
-Alternatively, provide templates (format strings or callables) that extract credentials from method arguments.
+        def _get_fresh_token(self) -> str:
+            # Implement token refresh or retrieval logic here
+            ...
+
+Basic authentication
+----------------------------
+
+For HTTP Basic authentication, use the :class:`~descanso.request_transformers.BasicAuth` transformer
+to automatically encode credentials and add the ``Authorization`` header.
+
+Use the ``from_credentials`` classmethod for constant username and password values.
+For dynamic credentials, provide format string templates or callable templates that extract values from method arguments.
 
 .. code-block:: python
 
+    from descanso import SyncClient, RestBuilder
     from descanso.request_transformers import BasicAuth
+
+    rest = RestBuilder()
 
     class Client(SyncClient):
         def __init__(self, base_url: str, session: Session):
@@ -53,7 +77,6 @@ Alternatively, provide templates (format strings or callables) that extract cred
                 ]
             )
 
-        # Templates that pull values from method args
         @rest.post(
             "/login",
             BasicAuth("{user}", "{password}"),
