@@ -35,3 +35,28 @@ Note, that we are not using f-strings here, format string will be evaluated late
             request.headers.append(("Authorization", f"Bearer {token}"))
             super().send_request(request)
 
+**Basic authentication**. Use the :class:`~descanso.request_transformers.BasicAuth` transformer to add an ``Authorization`` header with the Basic scheme.
+The ``from_credentials`` classmethod accepts constant login and password values.
+Alternatively, provide templates (format strings or callables) that extract credentials from method arguments.
+
+.. code-block:: python
+
+    from descanso.request_transformers import BasicAuth
+
+    class Client(SyncClient):
+        def __init__(self, base_url: str, session: Session):
+            super().__init__(
+                base_url=base_url,
+                session=session,
+                transformers=[
+                    BasicAuth.from_credentials("admin", "password")
+                ]
+            )
+
+        # Templates that pull values from method args
+        @rest.post(
+            "/login",
+            BasicAuth("{user}", "{password}"),
+        )
+        def login(self, user: str, password: str):
+            ...
