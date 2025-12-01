@@ -129,13 +129,7 @@ class Header(DestTransformer):
 
 
 class BasicAuth(BaseRequestTransformer):
-    """Add an HTTP Basic Authorization header built from templates.
-
-    The constructor accepts only templates for the login and password
-    (either a format string or a callable). If a template is omitted the
-    transformer will take the value from the incoming data under the
-    keys "login" and "password" respectively.
-    """
+    """HTTP Basic Authorization header."""
 
     def __init__(
         self,
@@ -161,12 +155,7 @@ class BasicAuth(BaseRequestTransformer):
 
     @classmethod
     def from_credentials(cls, login: Any, password: Any) -> "BasicAuth":
-        """Create a BasicAuth transformer from constant credentials.
-
-        The returned transformer uses zero-argument callables that return
-        the provided constants. Those templates won't consume any input
-        fields from the request data.
-        """
+        """Create a BasicAuth transformer from constant credentials."""
         return cls(lambda: login, lambda: password)
 
     def transform_fields(
