@@ -47,7 +47,7 @@ _MethodResultT = TypeVar("_MethodResultT")
 _MethodParamSpec = ParamSpec("_MethodParamSpec")
 
 
-class BuilderParams(TypedDict):
+class BuilderParams(TypedDict, total=False):
     body_name: str
 
     query_param_dumper: Dumper | None
