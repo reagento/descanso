@@ -175,11 +175,12 @@ class PackJsonRPC(RequestTransformer):
     ) -> HttpRequest:
         request_id = get_extra(request, EXTRA_JSON_RPC_REQUEST_ID)
         method = get_extra(request, EXTRA_JSON_RPC_METHOD)
+        params = {"params": request.body} if request.body is not None else {}
         request.body = {
             "jsonrpc": "2.0",
             "id": request_id,
             "method": method,
-            "params": request.body,
+            **params,
         }
         return request
 
