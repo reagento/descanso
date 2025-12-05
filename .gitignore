@@ -8,6 +8,7 @@ __pycache__/
 /docs-build
 /dist
 /build
+/src/descanso/_version.py
 
 # well known common utilities
 .idea/
