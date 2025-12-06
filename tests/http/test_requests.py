@@ -39,13 +39,13 @@ def test_jsonrpc_requests(server_addr):
     jsonrpc = JsonRPCBuilder(url="jsonrpc")
 
     class Client(RequestsClient):
-        @jsonrpc("good")
+        @jsonrpc(method="good")
         def do_good(self, body: Any) -> Any: ...
 
-        @jsonrpc("bad")
+        @jsonrpc(method="bad")
         def do_bad(self) -> Any: ...
 
-        @jsonrpc("invalid")
+        @jsonrpc(method="invalid")
         def do_invalid(self) -> Any: ...
 
     client = Client(server_addr, requests.Session())

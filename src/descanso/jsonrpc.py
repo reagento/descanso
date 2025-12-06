@@ -291,6 +291,7 @@ class JsonRPCBuilder:
             self._add_request_transformer(spec, Body(field.name))
 
     def _add_default_request_body_transformers(self, spec: MethodSpec):
+        self._add_default_jsonrpc_method(spec)
         self._add_body_transformer(spec)
 
         if self._get_body_field(spec):
@@ -357,6 +358,18 @@ class JsonRPCBuilder:
                 BodyModelLoad(spec.result_type, loader=loader),
             )
 
+    def _add_default_jsonrpc_method(self, spec: MethodSpec) -> None:
+        jsonrpc_method_transformer = next(
+            (
+                field
+                for field in spec.request_transformers
+                if isinstance(field, JsonRPCMethod)
+            ),
+            None,
+        )
+        if jsonrpc_method_transformer is None:
+            self._add_request_transformer(spec, JsonRPCMethod(spec.name))
+
     @overload
     def decorate(
         self,
@@ -403,22 +416,34 @@ class JsonRPCBuilder:
     @overload
     def __call__(
         self,
-        method: str,
+        transformer: Transformer | None = None,
         *transformers: Transformer,
+        method: str | None = None,
         **params: Unpack[BuilderParams],
     ) -> "JsonRPCBuilder": ...
 
     def __call__(
         self,
-        func_or_method: str | Callable,
+        func_or_transformer: Callable | Transformer | None = None,
         *transformers: Transformer,
+        method: str | None = None,
         **params: Unpack[BuilderParams],
     ) -> Any:
         if transformers or params:
             instance = self.with_params(*transformers, **params)
         else:
             instance = self
-        if isinstance(func_or_method, str):
-            return instance.with_params(JsonRPCMethod(func_or_method))
+
+        additional_transformers = (
+            (JsonRPCMethod(method),) if method is not None else ()
+        )
+
+        if func_or_transformer is None:
+            return instance.with_params(*additional_transformers)
+        elif isinstance(func_or_transformer, Transformer):
+            return instance.with_params(
+                func_or_transformer,
+                *additional_transformers,
+            )
         else:
-            return instance.decorate(func_or_method)
+            return instance.decorate(func_or_transformer)
