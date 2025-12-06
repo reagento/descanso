@@ -43,13 +43,13 @@ async def test_jsonrpc_aiohttp(server_addr, session):
     jsonrpc = JsonRPCBuilder(url="jsonrpc")
 
     class Client(AiohttpClient):
-        @jsonrpc(method="good")
+        @jsonrpc("good")
         def do_good(self, body: Any) -> Any: ...
 
-        @jsonrpc(method="bad")
+        @jsonrpc("bad")
         def do_bad(self) -> Any: ...
 
-        @jsonrpc(method="invalid")
+        @jsonrpc("invalid")
         def do_invalid(self) -> Any: ...
 
     client = Client(server_addr, session)

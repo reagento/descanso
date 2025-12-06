@@ -359,15 +359,16 @@ class JsonRPCBuilder:
             )
 
     def _add_default_jsonrpc_method(self, spec: MethodSpec) -> None:
-        jsonrpc_method_transformer = next(
+        jsonrpc_method_field = next(
             (
                 field
-                for field in spec.request_transformers
-                if isinstance(field, JsonRPCMethod)
+                for field in spec.fields_out
+                if field.name == EXTRA_JSON_RPC_METHOD
+                and field.dest is FieldDestination.EXTRA
             ),
             None,
         )
-        if jsonrpc_method_transformer is None:
+        if jsonrpc_method_field is None:
             self._add_request_transformer(spec, JsonRPCMethod(spec.name))
 
     @overload
@@ -416,7 +417,7 @@ class JsonRPCBuilder:
     @overload
     def __call__(
         self,
-        transformer: Transformer | None = None,
+        parameter: Transformer | str | None = None,
         *transformers: Transformer,
         method: str | None = None,
         **params: Unpack[BuilderParams],
@@ -424,9 +425,8 @@ class JsonRPCBuilder:
 
     def __call__(
         self,
-        func_or_transformer: Callable | Transformer | None = None,
+        func_or_parameter: Callable | Transformer | str | None = None,
         *transformers: Transformer,
-        method: str | None = None,
         **params: Unpack[BuilderParams],
     ) -> Any:
         if transformers or params:
@@ -434,16 +434,15 @@ class JsonRPCBuilder:
         else:
             instance = self
 
-        additional_transformers = (
-            (JsonRPCMethod(method),) if method is not None else ()
-        )
-
-        if func_or_transformer is None:
-            return instance.with_params(*additional_transformers)
-        elif isinstance(func_or_transformer, Transformer):
+        if func_or_parameter is None:
+            return instance
+        elif isinstance(func_or_parameter, str):
             return instance.with_params(
-                func_or_transformer,
-                *additional_transformers,
+                JsonRPCMethod(func_or_parameter),
+            )
+        elif isinstance(func_or_parameter, Transformer):
+            return instance.with_params(
+                func_or_parameter,
             )
         else:
-            return instance.decorate(func_or_transformer)
+            return instance.decorate(func_or_parameter)

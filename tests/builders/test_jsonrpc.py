@@ -29,7 +29,7 @@ def test_url():
     jsonrpc = JsonRPCBuilder(url="/foo")
 
     class Api:
-        @jsonrpc(method="methodname")
+        @jsonrpc("methodname")
         def do(self, body: int) -> Model:
             """Hello"""
 
@@ -80,7 +80,7 @@ def test_params():
     )
 
     class Api:
-        @jsonrpc(method="methodname")
+        @jsonrpc("methodname")
         def do(self, data: int) -> Model:
             """Hello"""
 
@@ -111,7 +111,7 @@ def test_override():
     jsonrpc = JsonRPCBuilder(url="/foo")
 
     class Api:
-        @jsonrpc(method="methodname", url="/bar")
+        @jsonrpc("methodname", url="/bar")
         def do(self, data: int) -> Model:
             """Hello"""
 
