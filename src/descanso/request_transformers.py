@@ -5,6 +5,8 @@ from collections.abc import Callable, Iterator, Sequence
 from inspect import getfullargspec
 from typing import Any, get_type_hints
 
+from kiss_headers import BasicAuthorization
+
 from .client import Dumper
 from .request import (
     BaseRequestTransformer,
@@ -64,10 +66,10 @@ class DestTransformer(BaseRequestTransformer):
 
     def transform_fields(
         self,
-        fields: Sequence[FieldIn],
+        fields_in: Sequence[FieldIn],
     ) -> Sequence[FieldOut]:
         type_hint = self.type_hint
-        for field in fields:
+        for field in fields_in:
             if field.name in self.args:
                 field.consumed_by.append(self)
                 if self.original_template is None:
@@ -88,10 +90,10 @@ class DestTransformer(BaseRequestTransformer):
         data: dict[str, Any],
     ) -> HttpRequest:
         request_field = getattr(request, self.dest.value)
-        data = self.template(
+        value = self.template(
             **{k: v for k, v in data.items() if k in self.args},
         )
-        request_field.append((self.name_out, data))
+        request_field.append((self.name_out, value))
         return request
 
     def __repr__(self):
@@ -119,10 +121,75 @@ class Header(DestTransformer):
         fields_out: Sequence[FieldOut],
         data: dict[str, Any],
     ) -> HttpRequest:
-        data = self.template(
+        value = self.template(
             **{k: v for k, v in data.items() if k in self.args},
         )
-        request.headers[self.name_out] = str(data)
+        request.headers[self.name_out] = str(value)
+        return request
+
+
+class BasicAuth(BaseRequestTransformer):
+    """HTTP Basic Authorization header."""
+
+    def __init__(
+        self,
+        login_template: Callable[..., Any] | str,
+        password_template: Callable[..., Any] | str,
+    ) -> None:
+        # Prepare templates (string.format or callable)
+        if isinstance(login_template, str):
+            self._login_template_func = login_template.format
+            self._login_args = get_params_from_string(login_template)
+        else:
+            self._login_template_func = login_template
+            self._login_args = get_params_from_callable(login_template)
+
+        if isinstance(password_template, str):
+            self._password_template_func = password_template.format
+            self._password_args = get_params_from_string(password_template)
+        else:
+            self._password_template_func = password_template
+            self._password_args = get_params_from_callable(password_template)
+
+        self.args = set(self._login_args + self._password_args)
+
+    @classmethod
+    def from_credentials(cls, login: Any, password: Any) -> "BasicAuth":
+        """Create a BasicAuth transformer from constant credentials."""
+        return cls(lambda: login, lambda: password)
+
+    def transform_fields(
+        self,
+        fields_in: Sequence[FieldIn],
+    ) -> Sequence[FieldOut]:
+        for field in fields_in:
+            if field.name in self.args:
+                field.consumed_by.append(self)
+        return [
+            FieldOut(
+                name="Authorization",
+                dest=FieldDestination.HEADER,
+                type_hint=str,
+            ),
+        ]
+
+    def transform_request(
+        self,
+        request: HttpRequest,
+        fields_in: Sequence[FieldIn],
+        fields_out: Sequence[FieldOut],
+        data: dict[str, Any],
+    ) -> HttpRequest:
+        username = self._login_template_func(
+            **{k: v for k, v in data.items() if k in self._login_args},
+        )
+        password = self._password_template_func(
+            **{k: v for k, v in data.items() if k in self._password_args},
+        )
+        auth = BasicAuthorization(
+            str(username), str(password), charset="utf-8",
+        )
+        request.headers += auth
         return request
 
 
@@ -161,9 +228,9 @@ class Url(BaseRequestTransformer):
 
     def transform_fields(
         self,
-        fields: Sequence[FieldIn],
+        fields_in: Sequence[FieldIn],
     ) -> Sequence[FieldOut]:
-        for field in fields:
+        for field in fields_in:
             if field.name in self.args:
                 field.consumed_by.append(self)
         return [self._field_out]
@@ -199,9 +266,9 @@ class File(BaseRequestTransformer):
 
     def transform_fields(
         self,
-        fields: Sequence[FieldIn],
+        fields_in: Sequence[FieldIn],
     ) -> Sequence[FieldOut]:
-        for field in fields:
+        for field in fields_in:
             if field.name == self.arg:
                 field.consumed_by.append(self)
                 return [
@@ -249,9 +316,9 @@ class Body(BaseRequestTransformer):
 
     def transform_fields(
         self,
-        fields: Sequence[FieldIn],
+        fields_in: Sequence[FieldIn],
     ) -> Sequence[FieldOut]:
-        for field in fields:
+        for field in fields_in:
             if field.name == self.arg:
                 field.consumed_by.append(self)
                 return [
@@ -374,11 +441,11 @@ class Skip(BaseRequestTransformer):
 
     def transform_fields(
         self,
-        fields: Sequence[FieldIn],
+        fields_in: Sequence[FieldIn],
     ) -> Sequence[FieldOut]:
         if not self.arg:
             return []
-        for field in fields:
+        for field in fields_in:
             if field.name == self.arg:
                 field.consumed_by.append(self)
         return []
