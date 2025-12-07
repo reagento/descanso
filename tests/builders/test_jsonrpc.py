@@ -1,3 +1,5 @@
+from dirty_equals import IsList
+
 from descanso import JsonRPCBuilder
 from descanso.jsonrpc import (
     JsonRPCErrorRaiser,
@@ -130,3 +132,47 @@ def test_override():
         dirty[JsonRPCErrorRaiser](),
         dirty[UnpackJsonRPC](),
     ]
+
+
+def test_default_jsonrpc_method() -> None:
+    jsonrpc = JsonRPCBuilder(url="/foo")
+
+    class Api:
+        @jsonrpc
+        def do(self, data: int) -> Model:...
+
+        @jsonrpc()
+        def work(self, data: int) -> Model:...
+
+
+    assert Api.do.spec.request_transformers == IsList(
+        dirty[JsonRPCMethod](method="do"),
+        length=...,
+    )
+    assert Api.work.spec.request_transformers == IsList(
+        dirty[JsonRPCMethod](method="work"),
+        length=...,
+    )
+
+
+def test_default_jsonrpc_method_with_transformers_and_params() -> None:
+    jsonrpc = JsonRPCBuilder(url="/foo")
+    req_transformer = Skip("0")
+    res_transformer = ErrorRaiser(codes=[200])
+
+    class Api:
+        @jsonrpc(req_transformer, res_transformer, url="/bar")
+        def do(self, data: int) -> Model:...
+
+    assert Api.do.spec.request_transformers == IsList(
+        dirty[JsonRPCMethod](method="do"),
+        req_transformer,
+        dirty[Url](original_template="/bar"),
+        check_order=False,
+        length=...,
+    )
+    assert Api.do.spec.response_transformers == IsList(
+        res_transformer,
+        check_order=False,
+        length=...,
+    )

@@ -291,6 +291,7 @@ class JsonRPCBuilder:
             self._add_request_transformer(spec, Body(field.name))
 
     def _add_default_request_body_transformers(self, spec: MethodSpec):
+        self._add_default_jsonrpc_method(spec)
         self._add_body_transformer(spec)
 
         if self._get_body_field(spec):
@@ -357,6 +358,19 @@ class JsonRPCBuilder:
                 BodyModelLoad(spec.result_type, loader=loader),
             )
 
+    def _add_default_jsonrpc_method(self, spec: MethodSpec) -> None:
+        jsonrpc_method_field = next(
+            (
+                field
+                for field in spec.fields_out
+                if field.name == EXTRA_JSON_RPC_METHOD
+                and field.dest is FieldDestination.EXTRA
+            ),
+            None,
+        )
+        if jsonrpc_method_field is None:
+            self._add_request_transformer(spec, JsonRPCMethod(spec.name))
+
     @overload
     def decorate(
         self,
@@ -403,14 +417,15 @@ class JsonRPCBuilder:
     @overload
     def __call__(
         self,
-        method: str,
+        parameter: Transformer | str | None = None,
         *transformers: Transformer,
+        method: str | None = None,
         **params: Unpack[BuilderParams],
     ) -> "JsonRPCBuilder": ...
 
     def __call__(
         self,
-        func_or_method: str | Callable,
+        func_or_parameter: Callable | Transformer | str | None = None,
         *transformers: Transformer,
         **params: Unpack[BuilderParams],
     ) -> Any:
@@ -418,7 +433,16 @@ class JsonRPCBuilder:
             instance = self.with_params(*transformers, **params)
         else:
             instance = self
-        if isinstance(func_or_method, str):
-            return instance.with_params(JsonRPCMethod(func_or_method))
+
+        if func_or_parameter is None:
+            return instance
+        elif isinstance(func_or_parameter, str):
+            return instance.with_params(
+                JsonRPCMethod(func_or_parameter),
+            )
+        elif isinstance(func_or_parameter, Transformer):
+            return instance.with_params(
+                func_or_parameter,
+            )
         else:
-            return instance.decorate(func_or_method)
+            return instance.decorate(func_or_parameter)
