@@ -169,7 +169,7 @@ To get full response with unprocessed body use ``HttpResponse`` as a method resu
 Status code
 ------------------------
 
-Status code checkin is done by an ``ErrorRaiser`` class set as a ``error_raiser`` parameter.
+Status code checking is done by an ``ErrorRaiser`` class set as a ``error_raiser`` parameter.
 
 You can join multiple transformers using ``|`` if you want different logic.
 
